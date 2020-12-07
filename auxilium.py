@@ -3,7 +3,10 @@ import libquanttree as qt
 import matplotlib.pyplot as plt
 import pandas as pd
 import sklearn.neural_network as nn
+import sklearn.linear_model as lin
 import libccm as ccm
+from sklearn import preprocessing
+from sklearn import neighbors
 
 
 # Creates and handles the dataset of the pi_values combinations
@@ -100,21 +103,17 @@ class Alternative_threshold_computation:
 # For small N we will average
 class Learner:
 
-    def __init__(self, bins_number, statistic, N_values):
-        layers_size = 4
+    def __init__(self, bins_number, statistic, maxN):
+        layers_size = bins_number
         self.bins_number = bins_number
         self.statistic = statistic
-        self.N_values = N_values
-        self.nets = {}
-        self.asymptpotic_net = nn.MLPRegressor(layers_size, solver = 'lbfgs', verbose = False, learning_rate='adaptive')
-        # TODO Set hyperparameters
-        self.max_N = max(N_values)
-        for index in self.N_values:
-            self.nets[index] = nn.MLPRegressor(layers_size, solver = 'lbfgs', verbose = False, learning_rate='adaptive', alpha = 0.0005)
+        self.net = nn.MLPRegressor(layers_size + 1)
+        self.asymptpotic_net = nn.MLPRegressor(layers_size)
+        self.max_N = maxN
         return
 
-    def tune_model_for_a_given_N(self, histograms, thresholds, N):
-        self.nets[N].fit(histograms, thresholds)
+    def tune_model(self, histograms_with_N, thresholds):
+        self.net.fit(histograms_with_N, thresholds)
         return
 
     def tune_model_for_asymptotical_values(self, histograms, thresholds):
@@ -122,30 +121,11 @@ class Learner:
         return
 
     def predict_threshold(self, histogram, N):
-        histogram = np.sort(histogram)
-        if N in self.nets.keys():
-            return self.nets[N].predict(histogram.reshape(1, -1))
-        elif N < min((self.nets.keys())):
-            return self.nets[min(self.nets.keys())].predict(histogram.reshape(1, -1))
-        elif N < self.max_N:
-            biggest_Smaller = 0
-            smallest_Bigger = self.max_N
-            for elem in self.nets.keys():
-                if elem < N and elem > biggest_Smaller:
-                    biggest_Smaller = elem
-                if elem > N and elem < smallest_Bigger:
-                    smallest_Bigger = elem
-            small_prediction = \
-                self.nets[biggest_Smaller].predict(histogram.reshape(1, -1))
-            big_prediction = \
-                self.nets[smallest_Bigger].predict(histogram.reshape(1, -1))
-            prediction = small_prediction + (big_prediction - small_prediction) * \
-                         ((N - biggest_Smaller) / (smallest_Bigger - biggest_Smaller))
-            return prediction
+        hist = np.array(list(histogram).append(N))
+        if N < self.max_N:
+           return self.net.predict(hist.reshape(1, -1))
         else:
-            print ("I am asymptotic")
             return self.asymptpotic_net.predict(histogram.reshape(1, -1))
-
 
 # Extends canonic quantTree with the possibilityu to modify the histogram associated
 class Extended_Quant_Tree(qt.QuantTree):
@@ -203,7 +183,7 @@ class Regressed_Change_Detection_Test:
 
 class Superman:
     def __init__(self, percentage, SKL, initial_pi_values, data_number,
-                 alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                  data_number_for_learner):
         self.data_number = data_number
         self.bins_number = bins_number
@@ -211,32 +191,13 @@ class Superman:
         self.nu = nu
         self.B = B
         self.statistic = statistic
-        self.N_values = N_values
+        self.max_N = max_N
         self.data_number_for_learner = data_number_for_learner
         self.alpha = alpha
         self.initial_pi_values = initial_pi_values
         self.SKL = SKL
         self.percentage = percentage
-        self.learner = None
         self.handler = Data_set_Handler(self.data_dimension)
-
-    #N_to_train are the values of N for the dictionary
-    def create_and_train_net(self):
-        print('Training')
-        self.learner = Learner(self.bins_number, self.statistic, self.N_values)
-        data_for_learner = DataSet_for_the_learner(self.bins_number,  self.data_number_for_learner)
-        data_for_learner.create_multiple_bins_combinations()
-        histograms = data_for_learner.histograms
-        for value in self.N_values:
-            print('training ' + str(value))
-            thresholds = data_for_learner.associate_thresholds(value, self.nu, self.statistic, self.alpha, self.B)
-            self.learner.tune_model_for_a_given_N(histograms, thresholds[value], value)
-        asymptotic_thresholds = []
-        for hist in histograms:
-            asymptotic_computer = Alternative_threshold_computation(hist, self.nu, self.statistic)
-            asymptotic_thresholds.append(asymptotic_computer.compute_threshold(self.alpha, self.B))
-        self.learner.tune_model_for_asymptotical_values(histograms, asymptotic_thresholds)
-        return
 
     def create_training_set_for_QT(self):
         self.data_set = self.handler.generate_data_set(self.data_number)
@@ -257,7 +218,10 @@ class Superman:
                 batch = self.handler.generate_similar_batch(self.nu, self.SKL)
             y = self.statistic(tree, batch)
             value += y > thr
-        return (number_of_experiments - value) / number_of_experiments
+        if equal:
+            return (number_of_experiments - value) / number_of_experiments
+        else:
+            return value/number_of_experiments
 
     def run_modified_algorithm_without_learner(self, number_of_experiments, equal = True):
         initial_db_size = int(len(self.data_set)*self.percentage)
@@ -284,7 +248,12 @@ class Superman:
             y2 = self.statistic(tree2, batch)
             value += y > thr
             value2 += y2 > thr2
-        return ( number_of_experiments - value)/number_of_experiments, ( number_of_experiments - value2)/number_of_experiments
+        if equal:
+            return (number_of_experiments - value) / number_of_experiments, (
+                        number_of_experiments - value2) / number_of_experiments
+        else:
+            return value/number_of_experiments, value2/number_of_experiments
+
 
     def run_asymtpotic_algorithm_without_learner(self, number_of_experiments, equal = True):
         initial_db_size = int(len(self.data_set) * self.percentage)
@@ -303,34 +272,175 @@ class Superman:
                 batch = self.handler.generate_similar_batch(self.nu, self.SKL)
             y = self.statistic(tree, batch)
             value += y > thr
-        return (number_of_experiments - value) / number_of_experiments
+        if equal:
+            return (number_of_experiments - value) / number_of_experiments
+        else:
+            return value / number_of_experiments
 
-    #TODO move here the SKL part
-    def run_modified_algorithm_with_learner(self, number_of_experiments, equal = True):
-        self.create_and_train_net()
+        #Uses as a prediction for the threshold the average of the thesholds in the DataBase
+    def run_Dummy(self, number_of_experiments, equal = True):
         initial_db_size = int(len(self.data_set) * self.percentage)
         initial_data = self.data_set[0:initial_db_size]
         sequent_data = self.data_set[initial_db_size:len(self.data_set)]
         tree = Extended_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
-        test = Regressed_Change_Detection_Test(tree, len(self.data_set), self.learner)
+        man = NN_man(self.bins_number, self.max_N, 30, 10)
+        thr = man.compute_dummy_prediction()
         value = 0
-        for counter in range (number_of_experiments):
+        for counter in range(number_of_experiments):
             if equal:
                 batch = self.handler.generate_data_set(self.nu)
             else:
                 batch = self.handler.generate_similar_batch(self.nu, self.SKL)
-            value += test.reject_null_hypothesis(batch, self.alpha, self.statistic)
-        print(value)
-        return float(value/number_of_experiments)
+            y = self.statistic(tree, batch)
+            value += y > thr
+        if equal:
+            return (number_of_experiments - value) / number_of_experiments
+        else:
+            return value / number_of_experiments
 
+    #TODO move here the SKL part
+    def run_modified_algorithm_with_learner(self, number_of_experiments, min_N, equal = True):
+        initial_db_size = int(len(self.data_set) * self.percentage)
+        initial_data = self.data_set[0:initial_db_size]
+        sequent_data = self.data_set[initial_db_size:len(self.data_set)]
+        tree = Extended_Quant_Tree(self.initial_pi_values)
+        tree.build_histogram(initial_data)
+        tree.modify_histogram(sequent_data)
+        man = NN_man(self.bins_number, self.max_N, 30, 150)
+        man.train()
+        thr = man.predict_value(tree.pi_values, tree.ndata)
+        value = 0
+        for counter in range(number_of_experiments):
+            if equal:
+                batch = self.handler.generate_data_set(self.nu)
+            else:
+                batch = self.handler.generate_similar_batch(self.nu, self.SKL)
+            y = self.statistic(tree, batch)
+            value += y > thr
+        if equal:
+            return (number_of_experiments - value) / number_of_experiments
+        else:
+            return value / number_of_experiments
 
-def create_bins_combination(bins_number):
+def create_bins_combination(bins_number, minN):
     gauss = ccm.random_gaussian(bins_number)
     histogram = np.random.multivariate_normal(gauss[0], gauss[1], 1)
     histogram = histogram[0]
     histogram = np.abs(histogram)
     summa = np.sum(histogram)
     histogram = histogram / summa
+    if minN == 0:
+        return histogram
+    if min(histogram) < 1/minN :
+        return create_bins_combination(bins_number, minN)
+    histogram = np.sort(histogram)
     return histogram
+
+class NN_man:
+    def __init__(self, bins_number, max_N, min_N, nodes):
+        self.bins_number = bins_number
+        self.standard_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='adaptive', verbose = False, n_iter_no_change=100, max_iter=2000, early_stopping=True)
+        self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='adaptive', verbose=False, n_iter_no_change=100, max_iter=2000, early_stopping=True)
+        #self.asymptotic_learner = lin.LinearRegression()
+        #self.asymptotic_learner = neighbors.KNeighborsRegressor(2 * nodes, weights='distance')
+        self.max_N = max_N
+        self.min_N = min_N
+        self.asymptotic_normalizer = None
+        return
+
+    def compute_dummy_prediction(self):
+        histograms, thresholds = self.retrieve_asymptotic_dataSet()
+        return float(np.average(thresholds))
+
+    def store_normal_dataSet(self, data_number, nu, statistic, alpha, B):
+        histograms_N_thr = np.zeros([data_number, self.bins_number + 2])
+        for counter in range(data_number):
+            if counter % 10 == 0:
+                print (counter)
+            N = np.random.randint(self.min_N, self.max_N)
+            histogram = create_bins_combination(self.bins_number, self.min_N)
+            hist = list(histogram)
+            tree = qt.QuantTree(histogram)
+            tree.ndata = N
+            com = qt.ChangeDetectionTest(tree, nu, statistic)
+            threshold = com.estimate_quanttree_threshold(alpha, B)
+            hist.append(threshold)
+            hist.append(N)
+            rich_histogram = np.array(hist)
+            rich_histogram = np.sort(rich_histogram)
+            histograms_N_thr[counter] = rich_histogram
+        frame = pd.DataFrame(histograms_N_thr)
+        frame.to_csv('File ending with N and thr')
+        return
+
+    def store_asymptotic_dataSet(self, data_number, nu, statistic, alpha, B):
+        histograms_thr = np.zeros([data_number, self.bins_number + 1])
+        for counter in range(data_number):
+            if counter % 1 == 0:
+                print (counter)
+            histogram = create_bins_combination(self.bins_number, 0)
+            alt = Alternative_threshold_computation(histogram, nu, statistic)
+            threshold = alt.compute_threshold(alpha, B)
+            hist = list(histogram)
+            hist.append(threshold)
+            histogram = np.array(hist)
+            histograms_thr[counter] = histogram
+        frame = pd.DataFrame(histograms_thr)
+        frame.to_csv('Asymptotic thresholds')
+        return
+
+    def retrieve_normal_dataSet(self):
+        df = pd.read_csv('File ending with N and thr')
+        df_numpy = df.to_numpy()
+        thresholds = df_numpy[:, -2]
+        histograms = np.delete(df_numpy, -2, 1)
+        histograms = np.delete(histograms, 0, 1 )
+        return histograms, thresholds
+
+    def retrieve_asymptotic_dataSet(self):
+        df = pd.read_csv('Asymptotic thresholds')
+        df_numpy = df.to_numpy()
+        thresholds = df_numpy[:,-1]
+        histograms = np.delete(df_numpy, -1, 1)
+        histograms = np.delete(histograms, 0, 1)
+        return histograms, thresholds
+
+    def normal_train(self):
+        histograms_with_N, thresholds = self.retrieve_normal_dataSet()
+        histograms_with_N = np.sort(histograms_with_N)
+        print(histograms_with_N[0])
+        self.standard_learner.fit(histograms_with_N, thresholds)
+        return
+
+    def asymptotic_train(self):
+        histograms, thresholds = self.retrieve_asymptotic_dataSet()
+        var_min_max = []
+        for histogram in histograms:
+            variance = np.var(histogram)
+            min = np.min(histogram)
+            max = np.max(histogram)
+            var_min_max.append([variance, min, max])
+        var_min_max = np.array(var_min_max)
+        histograms = np.sort(histograms)
+        self.asymptotic_normalizer = preprocessing.StandardScaler()
+        #self.asymptotic_normalizer.fit_transform(histograms)
+        self.asymptotic_learner.fit(histograms, thresholds)
+        return
+
+    def train(self):
+        self.normal_train()
+        self.asymptotic_train()
+
+
+    #Teoria, il rumore interno al singolo istogramma è superiore alla differenza tra istogrammi
+    def predict_value(self, histogram, N):
+        if N > self.max_N:
+            return self.asymptotic_learner.predict(histogram.reshape(1, -1))
+        else:
+            hist = list(histogram)
+            hist.append(N)
+            histogram = np.array(hist)
+            histogram = np.sort(histogram)
+            return self.standard_learner.predict(histogram.reshape(1, -1))

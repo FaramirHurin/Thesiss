@@ -2,24 +2,26 @@ import auxilium as aux
 import libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
 
 #HYPERPARAMETERS
-percentage = 0.2
-SKL = 6
-bins_number = 16
+percentage = 0.01
+bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
-data_number = 1000
-alpha = [0.05]
-data_Dimension = 8
+data_number = 10000
+alpha = [0.005]
+data_Dimension = 3
 nu = 32
-B = 1000
-statistic = qt.pearson_statistic
+B = 4000
+statistic = qt.tv_statistic
 X = [3]
-N_values = np.power(2, X)
-data_number_for_learner = 500
+data_number_for_learner = 5000
+max_N = 2000
+min_N = 50
+SKL = 1
 
 #Old test, must beeliminated when the new is ready
-def testFP0():
+def testFP0(SKL):
     #Hyperparameters
     number_of_training_sets = 10
     number_of_tests_per_training = 10
@@ -96,14 +98,14 @@ def test_cuts():
 Test the performance of the two on the same batches and plot the reuslt.
 Result: Two box plots
 """
-def compare_FP0():
-    number_of_tests_for_the_plot = 100
+def compare_FP0(SKL):
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 2000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                 alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                  data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         test.create_training_set_for_QT()
@@ -123,14 +125,15 @@ def compare_FP0():
     plt.show()
     return
 
-def compare_FP0_with_asymptotic():
-    number_of_tests_for_the_plot = 50
+def compare_FP0_with_asymptotic(SKL):
+    print (str(data_number) + ' dataNumber')
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 2000
+    number_of_batches_per_test = 10000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                 alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                  data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         test.create_training_set_for_QT()
@@ -140,7 +143,7 @@ def compare_FP0_with_asymptotic():
         modified_value += test.run_asymtpotic_algorithm_without_learner(number_of_batches_per_test)
         normal_to_plot.append(1 - normal_value)
         modified_to_plot.append(1 - modified_value)
-    print ('The means are: modified and normal')
+    print ('Given this quantity of data ' + str(data_number) + ' the means for the FP0 are: asymptotic  and normal')
     print (np.mean(modified_to_plot), np.mean(normal_to_plot))
     fig, axs = plt.subplots(2)
     axs[0].boxplot(normal_to_plot, notch=False)
@@ -150,52 +153,76 @@ def compare_FP0_with_asymptotic():
     plt.show()
     return
 
-def compare_power():
-    number_of_tests_for_the_plot = 1
+def compare_power_with_asymptotic(SKL):
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 1000
+    number_of_batches_per_test = 2000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                        alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                         data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         test.create_training_set_for_QT()
         normal_value = 0
         modified_value = 0
         normal_value += test.run_normal_algorithm(number_of_batches_per_test, False)
-        modified_value += test.run_modified_algorithm_without_learner(number_of_batches_per_test, False)[0]
+        modified_value += test.run_asymtpotic_algorithm_without_learner(number_of_batches_per_test, False)
+        normal_to_plot.append(1 - normal_value)
+        modified_to_plot.append(1 - modified_value)
+    print('The means for the powers are: asymptotic and normal')
+    print(np.mean(modified_to_plot), np.mean(normal_to_plot))
+    fig, axs = plt.subplots(2)
+    axs[0].boxplot(normal_to_plot, notch=False)
+    axs[0].set_title('Standard power')
+    axs[1].boxplot(modified_to_plot, notch=False)
+    axs[1].set_title('Extended with asymptotic power')
+    plt.show()
+    return
+
+def compare_power(SKL):
+    number_of_tests_for_the_plot = 10
+    normal_to_plot = []
+    modified_to_plot = []
+    number_of_batches_per_test = 2000
+
+    test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+                        data_number_for_learner)
+    for index in range(number_of_tests_for_the_plot):
+        test.create_training_set_for_QT()
+        normal_value = 0
+        modified_value = 0
+        v1, v2 = test.run_modified_algorithm_without_learner\
+            (number_of_batches_per_test, False)
+        normal_value += v2
+        modified_value += v1
         normal_to_plot.append(normal_value)
         modified_to_plot.append(modified_value)
 
-    #normal_to_plot = np.ones(len(normal_to_plot)) - normal_to_plot
-    #modified_to_plot = np.ones(len(modified_to_plot)) - modified_to_plot
-
-    print ('Am I plotting? 2')
-    #fig, axs = plt.subplots(2)
-    #axs[0].boxplot(normal_to_plot, notch=False)
-    #axs[0].set_title('Standard power')
-    #axs[1].boxplot(modified_to_plot, notch=False)
-    #axs[1].set_title('Extended power')
-    #plt.show()
+    print ('Powers are: normal = ' + str(np.mean(normal_to_plot)) + 'modified is' + str(np.mean(modified_to_plot)))
+    fig, axs = plt.subplots(2)
+    axs[0].boxplot(normal_to_plot, notch=False)
+    axs[0].set_title('Standard power')
+    axs[1].boxplot(modified_to_plot, notch=False)
+    axs[1].set_title('Extended power')
+    plt.show()
     return normal_to_plot, modified_to_plot
 
-def compare_regressor_FP0():
-    number_of_tests_for_the_plot = 1
+def compare_regressor_FP0(SKL):
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 1000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                        alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                         data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         print('experiment ' + str(index))
         test.create_training_set_for_QT()
-        normal_value = 0
-        modified_value = 0
-        normal_value += test.run_normal_algorithm(number_of_batches_per_test)
-        modified_value += test.run_modified_algorithm_with_learner(number_of_batches_per_test)
+        normal_value = test.run_normal_algorithm(number_of_batches_per_test)
+        modified_value = float(test.run_modified_algorithm_with_learner(number_of_batches_per_test, min_N))
         normal_to_plot.append(normal_value)
         modified_to_plot.append(modified_value)
 
@@ -208,31 +235,29 @@ def compare_regressor_FP0():
     plt.show()
     return
 
-def compare_regressor_power():
-    number_of_tests_for_the_plot = 1
+def compare_regressor_power(SKL):
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 1000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                        alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                         data_number_for_learner)
+
     for index in range(number_of_tests_for_the_plot):
         test.create_training_set_for_QT()
-        test.create_and_train_net()
-        normal_value = 0
-        modified_value = 0
-        normal_value += test.run_normal_algorithm(number_of_batches_per_test, False)
-        modified_value += test.run_modified_algorithm_with_learner(number_of_batches_per_test, False)
+        normal_value = test.run_normal_algorithm(number_of_batches_per_test, False)
+        modified_value = test.run_modified_algorithm_with_learner(number_of_batches_per_test, False)
         normal_to_plot.append(normal_value)
-        modified_to_plot.append(modified_value)
+        modified_to_plot.append(float(modified_value))
 
     print ('Am I plotting 4')
     fig, axs = plt.subplots(2)
     axs[0].boxplot(normal_to_plot, notch=False)
-    axs[0].set_title('Standard: 1 - power')
+    axs[0].set_title('Standard: power')
     axs[1].boxplot(modified_to_plot, notch=False)
-    axs[1].set_title('Regressor: 1 - power')
+    axs[1].set_title('Regressor: power')
     plt.show()
 
 """Generate N1 and N2 data points. For both generate B data points and plot 
@@ -245,7 +270,7 @@ def plot_cumulative_functions(N1, N2, B, pi_values, nu, statistic):
     def_values1 = np.zeros(B)
     def_values2 = np.zeros(B)
     for indice in range(to_average):
-        pi_values = aux.create_bins_combination(bins_number)
+        pi_values = aux.create_bins_combination(bins_number, min_N)
         statistics1 = []
         statistics2 = []
         data_set1 = np.random.uniform(0, 1, N1)
@@ -298,20 +323,19 @@ def test_thresholds_association():
     helper.associate_thresholds(50, nu, statistic, alpha, B)
     print(helper.thresholds)
 
-
-def check_net():
+def check_net(SKL):
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                       alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                       alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                        data_number_for_learner)
-    test.create_training_set_for_QT()
-    test.create_and_train_net()
+    #test.create_training_set_for_QT()
+    #test.create_and_train_net()
     for index in range(20):
-        histogram = aux.create_bins_combination(bins_number)
+        histogram = aux.create_bins_combination(bins_number, data_number)
         print ('predicted value')
         print(test.learner.predict_threshold(histogram, data_number))
         tree = qt.QuantTree(histogram)
         tree.build_histogram(test.data_set)
-        test2 =qt.ChangeDetectionTest(tree, nu, statistic)
+        test2 = qt.ChangeDetectionTest(tree, nu, statistic)
         print ('Tru threshold is:')
         print(test2.estimate_quanttree_threshold(alpha, B))
 
@@ -340,9 +364,9 @@ def check_alternative_computaton():
 def plot_normal_computation():
     normals = []
     for index in range(5):
-        bins = aux.create_bins_combination(bins_number)
+        bins = aux.create_bins_combination(bins_number, 20)
         tree = qt.QuantTree(bins)
-        tree.ndata = 200000
+        tree.ndata = 20000
         test = qt.ChangeDetectionTest(tree, nu, statistic)
         alt = test.estimate_quanttree_threshold(alpha, B)
         normals.append(alt)
@@ -352,39 +376,61 @@ def plot_normal_computation():
         plt.show()
     return
 
-def compare_power_with_asymptotic():
-    number_of_tests_for_the_plot = 50
+def compare_FP0_with_Dummy(SKL):
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 2000
+    number_of_batches_per_test = 10000
 
     test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                        alpha, bins_number, data_Dimension, nu, B, statistic, N_values,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                         data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         test.create_training_set_for_QT()
-        normal_value = 0
-        modified_value = 0
-        normal_value += test.run_normal_algorithm(number_of_batches_per_test, False)
-        modified_value += test.run_asymtpotic_algorithm_without_learner(number_of_batches_per_test, False)
+        normal_value = test.run_normal_algorithm(number_of_batches_per_test, True)
+        modified_value = test.run_Dummy(number_of_batches_per_test, True)
         normal_to_plot.append(normal_value)
         modified_to_plot.append(modified_value)
 
     normal_to_plot = np.ones(len(normal_to_plot)) - normal_to_plot
     modified_to_plot = np.ones(len(modified_to_plot)) - modified_to_plot
 
-    print('Powers: modified and normal')
-    print( np.mean(modified_to_plot), np.mean(normal_to_plot))
+    print('FP0 are')
+    print( 'Dummy = ' + str(np.mean(modified_to_plot)) + ' , normal is' + str( np.mean(normal_to_plot)))
     fig, axs = plt.subplots(2)
     axs[0].boxplot(normal_to_plot, notch=False)
-    axs[0].set_title('Standard power')
+    axs[0].set_title('Standard FPO')
     axs[1].boxplot(modified_to_plot, notch=False)
-    axs[1].set_title('Extended power with asymptotic')
+    axs[1].set_title('Dummy FP0')
     plt.show()
 
+    def compare_power_with_asymptotic(SKL):
+        number_of_tests_for_the_plot = 10
+        normal_to_plot = []
+        modified_to_plot = []
+        number_of_batches_per_test = 1000
 
-#plot_cumulative_functions(1000, np.inf, B, initial_pi_values, nu, statistic)
+        test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
+                            alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+                            data_number_for_learner)
+        for index in range(number_of_tests_for_the_plot):
+            test.create_training_set_for_QT()
+            normal_value = test.run_normal_algorithm(number_of_batches_per_test, False)
+            modified_value = test.run_asymtpotic_algorithm_without_learner(number_of_batches_per_test, False)
+            normal_to_plot.append(normal_value)
+            modified_to_plot.append(modified_value)
 
+        normal_to_plot = np.ones(len(normal_to_plot)) - normal_to_plot
+        modified_to_plot = np.ones(len(modified_to_plot)) - modified_to_plot
+
+        print('Powers: modified and normal')
+        print(np.mean(modified_to_plot), np.mean(normal_to_plot))
+        fig, axs = plt.subplots(2)
+        axs[0].boxplot(normal_to_plot, notch=False)
+        axs[0].set_title('Standard power')
+        axs[1].boxplot(modified_to_plot, notch=False)
+        axs[1].set_title('Extended power with asymptotic')
+        plt.show()
 
 def test_the_powers():
     normals = []
@@ -392,7 +438,7 @@ def test_the_powers():
     x_values = []
     for sK in range(10):
         SKL = sK + 1
-        norm, ext = compare_power()
+        norm, ext = compare_power(SKL)
         normals.append(norm)
         modified.append(ext)
         x_values.append(sK + 1)
@@ -402,25 +448,68 @@ def test_the_powers():
     for index in range(len(normals)):
         normal_to_plot.append(np.mean(normals[index]))
         modified_to_plot.append(np.mean(modified[index]))
-    plt.plot(x_values, normal_to_plot)
-    plt.title('Normal powers')
-    plt.plot(x_values, modified_to_plot)
-    plt.title('Modified values')
+    plt.plot(x_values, normal_to_plot, label = 'Normal')
+    plt.plot(x_values, modified_to_plot, label = 'Modified')
+    plt.title('Normal and modified power for growing SKL')
+    plt.legend()
     plt.show()
     return
 
-test_the_powers()
+def test_dataSet():
+    nodes = 10000
+    n = aux.NN_man(bins_number, 40, 20, nodes)
+    # n.store_asymptotic_dataSet(data_number_for_learner, nu, statistic, alpha, B)
+    histogrms, thresholds = n.retrieve_asymptotic_dataSet()
+    for index in range(len(histogrms)):
+        print ('True value ' + str(aux.Alternative_threshold_computation(histogrms[index], nu, statistic).compute_threshold(alpha, B)))
+        print ('Value stored ' + str(thresholds[index]))
 
-#compare_FP0()
+def compare_power_with_Dummy(SKL):
+    number_of_tests_for_the_plot = 50
+    normal_to_plot = []
+    modified_to_plot = []
+    number_of_batches_per_test = 2000
 
-#compare_power()
-compare_FP0_with_asymptotic()
+    test = aux.Superman(percentage, SKL, initial_pi_values, data_number,
+                        alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+                        data_number_for_learner)
+    for index in range(number_of_tests_for_the_plot):
+        test.create_training_set_for_QT()
+        normal_value = test.run_normal_algorithm(number_of_batches_per_test, False)
+        modified_value = test.run_Dummy(number_of_batches_per_test, False)
+        normal_to_plot.append(normal_value)
+        modified_to_plot.append(modified_value)
+
+    normal_to_plot = np.ones(len(normal_to_plot)) - normal_to_plot
+    modified_to_plot = np.ones(len(modified_to_plot)) - modified_to_plot
+
+    print('Powers are: dummy and normal')
+    print( np.mean(modified_to_plot), np.mean(normal_to_plot))
+    fig, axs = plt.subplots(2)
+    axs[0].boxplot(normal_to_plot, notch=False)
+    axs[0].set_title('Standard power')
+    axs[1].boxplot(modified_to_plot, notch=False)
+    axs[1].set_title('Dummy power')
+    plt.show()
+
+def store_datestets():
+    nodes = 3
+    n = aux.NN_man(bins_number, max_N, min_N, nodes)
+    n.store_normal_dataSet(data_number_for_learner, nu, statistic, alpha, 4000)
+    n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, alpha, 5000)
+
+#plot_cumulative_functions(min_N, max_N, B, initial_pi_values, nu, statistic)
+
+
+#store_datestets()
+#check_net(10)
+#store_datestets()
+
 """
 compare_power_with_asymptotic()
 
 
-compare_regressor_FP0()
-compare_regressor_power()
 
 check_alternative_computaton()
 """
+

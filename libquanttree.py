@@ -73,7 +73,7 @@ class QuantTree(Histogram):
         limits[1, :] = np.inf
 
         # all samples are available
-        available = [True] * ndata
+        available =  [True for n in range (0,ndata)]
 
         # iteratively generate the leaves
         for i_leaf in range(nbin - 1):
@@ -138,7 +138,7 @@ class QuantTreeUnivariate(QuantTree):
 
         ndata = len(data)
         self.ndata = ndata
-        L_values = np.round(self.pi_values * ndata)
+        L_values = np.floor(self.pi_values * ndata)
         L_acc = np.cumsum(L_values)
         L_acc = [np.int(i) for i in L_acc]
 
