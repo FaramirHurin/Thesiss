@@ -7,6 +7,7 @@ import sklearn.linear_model as lin
 import libccm as ccm
 from sklearn import preprocessing
 from sklearn import neighbors
+import csv
 
 
 # Creates and handles the dataset of the pi_values combinations
@@ -180,7 +181,6 @@ class Regressed_Change_Detection_Test:
          return y > self.threshold
 
 
-
 class Superman:
     def __init__(self, percentage, SKL, initial_pi_values, data_number,
                  alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
@@ -308,7 +308,7 @@ class Superman:
         tree = Extended_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
-        man = NN_man(self.bins_number, self.max_N, 30, 150)
+        man = NN_man(self.bins_number, self.max_N, 30, 200)
         man.train()
         thr = man.predict_value(tree.pi_values, tree.ndata)
         value = 0
@@ -372,7 +372,11 @@ class NN_man:
             rich_histogram = np.sort(rich_histogram)
             histograms_N_thr[counter] = rich_histogram
         frame = pd.DataFrame(histograms_N_thr)
-        frame.to_csv('File ending with N and thr')
+        alpha = alpha[0]
+        if alpha == 0.5:
+            frame.to_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\File_N_and_thr_0_5')
+        elif alpha == 0.01:
+            frame.to_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\File_N_and_thr_0_01')
         return
 
     def store_asymptotic_dataSet(self, data_number, nu, statistic, alpha, B):
@@ -388,34 +392,40 @@ class NN_man:
             histogram = np.array(hist)
             histograms_thr[counter] = histogram
         frame = pd.DataFrame(histograms_thr)
-        frame.to_csv('Asymptotic thresholds')
+        alpha = alpha[0]
+        if alpha == 0.5:
+            frame.to_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\Asymptotic_0_5')
+        elif alpha == 0.01:
+            frame.to_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\Asymptotic_0._1')
         return
 
-    def retrieve_normal_dataSet(self):
-        df = pd.read_csv('File ending with N and thr')
+    def retrieve_normal_dataSet(self, alpha):
+        #df = pd.read_csv('File ending with N and thr')
+        df = pd.read_csv('File with N and thr: '+str(alpha))
         df_numpy = df.to_numpy()
         thresholds = df_numpy[:, -2]
         histograms = np.delete(df_numpy, -2, 1)
         histograms = np.delete(histograms, 0, 1 )
         return histograms, thresholds
 
-    def retrieve_asymptotic_dataSet(self):
-        df = pd.read_csv('Asymptotic thresholds')
+    def retrieve_asymptotic_dataSet(self, alpha):
+        #df = pd.read_csv('Asymptotic_thresholds')
+        df = pd.read_csv('Asymptotic_thresholds: ' + str(alpha))
         df_numpy = df.to_numpy()
         thresholds = df_numpy[:,-1]
         histograms = np.delete(df_numpy, -1, 1)
         histograms = np.delete(histograms, 0, 1)
         return histograms, thresholds
 
-    def normal_train(self):
-        histograms_with_N, thresholds = self.retrieve_normal_dataSet()
+    def normal_train(self, alpha):
+        histograms_with_N, thresholds = self.retrieve_normal_dataSet(alpha)
         histograms_with_N = np.sort(histograms_with_N)
         print(histograms_with_N[0])
         self.standard_learner.fit(histograms_with_N, thresholds)
         return
 
-    def asymptotic_train(self):
-        histograms, thresholds = self.retrieve_asymptotic_dataSet()
+    def asymptotic_train(self, alpha):
+        histograms, thresholds = self.retrieve_asymptotic_dataSet(alpha)
         var_min_max = []
         for histogram in histograms:
             variance = np.var(histogram)
@@ -429,9 +439,9 @@ class NN_man:
         self.asymptotic_learner.fit(histograms, thresholds)
         return
 
-    def train(self):
-        self.normal_train()
-        self.asymptotic_train()
+    def train(self, alpha):
+        self.normal_train(alpha)
+        self.asymptotic_train(alpha)
 
 
     #Teoria, il rumore interno al singolo istogramma è superiore alla differenza tra istogrammi

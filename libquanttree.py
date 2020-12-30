@@ -220,7 +220,7 @@ class ChangeDetectionTest:
         tau = threshold.get((stat_name, alpha, nbin, ndata, nu))
         return tau
 
-    def estimate_quanttree_threshold(self, alpha, B=1000000):
+    def estimate_quanttree_threshold(self, alpha, B):
         if not isinstance(alpha, list):
             alpha_values = (alpha)
         else:
@@ -239,7 +239,7 @@ class ChangeDetectionTest:
         stats.insert(0, stats[0] - 1)
         threshold_values = [stats[np.int(np.ceil((1-alpha) * B))] for alpha in alpha_values]
         self.set_threshold(alpha_values, threshold_values)
-
+        x = np.array(stats)
         if len(alpha_values) == 1:
             threshold_values = threshold_values[0]
         return threshold_values

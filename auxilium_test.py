@@ -12,13 +12,15 @@ data_number = 10000
 alpha = [0.005]
 data_Dimension = 3
 nu = 32
-B = 4000
+B = 3000
 statistic = qt.tv_statistic
 X = [3]
-data_number_for_learner = 5000
-max_N = 2000
-min_N = 50
+data_number_for_learner = 10000
+max_N = bins_number * 500
+min_N = nu
 SKL = 1
+
+#WE ARE STORING WITH NU = 32
 
 #Old test, must beeliminated when the new is ready
 def testFP0(SKL):
@@ -495,11 +497,17 @@ def compare_power_with_Dummy(SKL):
 def store_datestets():
     nodes = 3
     n = aux.NN_man(bins_number, max_N, min_N, nodes)
-    n.store_normal_dataSet(data_number_for_learner, nu, statistic, alpha, 4000)
-    n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, alpha, 5000)
+    #n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.01], 4000)
+    #n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.5], 4000)
+    n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.01], 5000)
+    n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.5], 5000)
+
+
 
 #plot_cumulative_functions(min_N, max_N, B, initial_pi_values, nu, statistic)
 
+#compare_FP0(1)
+#compare_power(1)
 
 #store_datestets()
 #check_net(10)

@@ -213,20 +213,23 @@ def compare_FP0s(algorithms, number_of_experiments, batches_per_experiment):
         superman.create_training_set_for_QT()
         for algorithm_number in range(len(algorithms)):
             if algorithms[algorithm_number] == 'normal':
-                results[counter][algorithm_number] = superman.run_normal_algorithm(batches_per_experiment)
+                results[counter][algorithm_number] = \
+                    superman.run_modified_algorithm_without_learner(batches_per_experiment, min_N)[1]
             elif algorithms[algorithm_number] == 'modified':
                 results[counter][algorithm_number] = \
-                superman.run_asymtpotic_algorithm_without_learner(batches_per_experiment)
+                    superman.run_modified_algorithm_with_learner(batches_per_experiment, min_N)[0]
             elif algorithms[algorithm_number] == 'asymptotic':
                 results[counter][algorithm_number] = \
                     superman.run_asymtpotic_algorithm_without_learner(batches_per_experiment)
             elif algorithms[algorithm_number] == 'regressor':
                 results[counter][algorithm_number] = \
                     superman.run_modified_algorithm_with_learner(batches_per_experiment, aux_test.min_N)
-    for counter in range(len(algorithms)):
-        plt.boxplot(results[counter])
-        plt.title('FP0' + str(algorithms[counter]))
-        plt.show()
+    plt.fig, axs = plt.subplots(1, len(algorithms))
+    results = np.transpose(results)
+    for alg in range(len(algorithms)):
+        axs[alg].boxplot(results[alg])
+        axs[alg].set_title('FP0 '+ str(algorithms[alg]))
+    plt.show()
     return
 
 
@@ -239,20 +242,22 @@ def compare_powers(algorithms, number_of_experiments, batches_per_experiment, SK
         superman.create_training_set_for_QT()
         for algorithm_number in range(len(algorithms)):
             if algorithms[algorithm_number] == 'normal':
-                results[counter][algorithm_number] = superman.run_normal_algorithm(batches_per_experiment, False)
+                results[counter][algorithm_number] = \
+                    superman.run_modified_algorithm_without_learner(batches_per_experiment, False)[1]
             elif algorithms[algorithm_number] == 'modified':
                 results[counter][algorithm_number] = \
-                superman.run_asymtpotic_algorithm_without_learner(batches_per_experiment, False)
+                    superman.run_modified_algorithm_without_learner(batches_per_experiment, False)[0]
             elif algorithms[algorithm_number] == 'asymptotic':
                 results[counter][algorithm_number] = \
                     superman.run_asymtpotic_algorithm_without_learner(batches_per_experiment, False)
             elif algorithms[algorithm_number] == 'regressor':
                 results[counter][algorithm_number] = \
                     superman.run_modified_algorithm_with_learner(batches_per_experiment, aux_test.min_N, False)
-    for counter in range(len(algorithms)):
-        plt.boxplot(results[counter])
-        plt.title('Power' + str(algorithms[counter]))
-        plt.show()
+    plt.fig, axs = plt.subplots(1, len(algorithms))
+    for alg in range(len(algorithms)):
+        axs[alg].boxplot(results[:, alg])
+        axs[alg].set_title('Power'+ str(algorithms[alg]))
+    plt.show()
     return
 
 
@@ -265,8 +270,8 @@ observe_growing_asymptpotic_B(bins,[2000, 3000, 4000, 5000, 6000], 500, 100)
 #test_high_thresholds_histograms()
 #try_normal_correctness()
 #test_normal_training(100, 50, 1000)
-test_asymptotic_training(1000)
+#test_asymptotic_training(1000)\\
 
 print('Ciao')
-#compare_FP0s(['normal', 'modified', 'asymptotic', 'regressor'], 20, 2000)
-#compare_powers(['normal', 'modified', 'asymptotic', 'regressor'], 20, 2000, 2)
+compare_FP0s(['normal', 'modified', 'asymptotic', 'regressor'], 300, 3000)
+compare_powers(['normal', 'modified', 'asymptotic', 'regressor'], 300, 3000, 2)
