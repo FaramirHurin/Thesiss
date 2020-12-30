@@ -41,8 +41,8 @@ class DataSet_for_the_learner:
 
     def asymptotically_associate_thresholds(self, nu, stat, alpha, B):
         for histogram_number in range(self.data_number):
-            alternative_computation = \
-                Alternative_threshold_computation(self.histograms[histogram_number], nu, stat)
+            alternative_computation = Alternative_threshold_computation\
+                    (self.histograms[histogram_number], nu, stat)
             threshold = alternative_computation.compute_threshold(alpha, B)
             self.asymptotyical_thresholds[histogram_number] = threshold
         return self.asymptotyical_thresholds
@@ -100,35 +100,8 @@ class Alternative_threshold_computation:
         return threshold
 
 
-# The neural network used to guess the thresholds.
-# For small N we will average
-class Learner:
 
-    def __init__(self, bins_number, statistic, maxN):
-        layers_size = bins_number
-        self.bins_number = bins_number
-        self.statistic = statistic
-        self.net = nn.MLPRegressor(layers_size + 1)
-        self.asymptpotic_net = nn.MLPRegressor(layers_size)
-        self.max_N = maxN
-        return
-
-    def tune_model(self, histograms_with_N, thresholds):
-        self.net.fit(histograms_with_N, thresholds)
-        return
-
-    def tune_model_for_asymptotical_values(self, histograms, thresholds):
-        self.asymptpotic_net.fit(histograms, thresholds)
-        return
-
-    def predict_threshold(self, histogram, N):
-        hist = np.array(list(histogram).append(N))
-        if N < self.max_N:
-           return self.net.predict(hist.reshape(1, -1))
-        else:
-            return self.asymptpotic_net.predict(histogram.reshape(1, -1))
-
-# Extends canonic quantTree with the possibilityu to modify the histogram associated
+# Extends canonic quantTree with the possibility to modify the histogram associated
 class Extended_Quant_Tree(qt.QuantTree):
 
     def __init__(self, pi_values):
@@ -158,10 +131,6 @@ class Data_set_Handler:
         self.gauss0 = ccm.random_gaussian(self.dimensions_number)
         return
 
-    def generate_data_set(self, data_number):
-        self.data_set = np.random.multivariate_normal(self.gauss0[0], self.gauss0[1], data_number)
-        return self.data_set
-
     def return_equal_batch(self, B):
         return np.random.multivariate_normal(self.gauss0[0], self.gauss0[1], B)
 
@@ -169,16 +138,6 @@ class Data_set_Handler:
         rot, shift = ccm.compute_roto_translation(self.gauss0, target_sKL)
         gauss1 = ccm.rotate_and_shift_gaussian(self.gauss0, rot, shift)
         return np.random.multivariate_normal(gauss1[0], gauss1[1], B)
-
-#TODO Modify in order to be used for different alpha (here or in the regressor)
-class Regressed_Change_Detection_Test:
-    def __init__(self, model, ndata, regressor):
-        self.model = model
-        self.threshold = regressor.predict_threshold(model.pi_values, ndata)
-
-    def reject_null_hypothesis(self, W, alpha, statistic):
-         y = statistic(self.model, W)
-         return y > self.threshold
 
 
 class Superman:
@@ -400,8 +359,15 @@ class NN_man:
         return
 
     def retrieve_normal_dataSet(self, alpha):
+        if not isinstance(alpha, float):
+            alpha = alpha[0]
         #df = pd.read_csv('File ending with N and thr')
-        df = pd.read_csv('File with N and thr: '+str(alpha))
+        if alpha == 0.1:
+            df = pd.read_csv('File_N_and_thr_0_01')
+        elif alpha == 0.5:
+            df = pd.read_csv('File_N_and_thr_0_5')
+        else:
+            raise Exception('alpha is wrong, expected 0.1 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()
         thresholds = df_numpy[:, -2]
         histograms = np.delete(df_numpy, -2, 1)
@@ -409,8 +375,14 @@ class NN_man:
         return histograms, thresholds
 
     def retrieve_asymptotic_dataSet(self, alpha):
-        #df = pd.read_csv('Asymptotic_thresholds')
-        df = pd.read_csv('Asymptotic_thresholds: ' + str(alpha))
+        if not isinstance(alpha, float):
+            alpha = alpha[0]
+        if alpha == 0.1:
+            df = pd.read_csv('Asymptotic_0._1')
+        elif alpha == 0.5:
+            df = pd.read_csv('Asymptotic_0_5')
+        else:
+            raise Exception('alpha is wrong, expected 0.1 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()
         thresholds = df_numpy[:,-1]
         histograms = np.delete(df_numpy, -1, 1)
@@ -420,21 +392,13 @@ class NN_man:
     def normal_train(self, alpha):
         histograms_with_N, thresholds = self.retrieve_normal_dataSet(alpha)
         histograms_with_N = np.sort(histograms_with_N)
-        print(histograms_with_N[0])
         self.standard_learner.fit(histograms_with_N, thresholds)
         return
 
     def asymptotic_train(self, alpha):
         histograms, thresholds = self.retrieve_asymptotic_dataSet(alpha)
-        var_min_max = []
-        for histogram in histograms:
-            variance = np.var(histogram)
-            min = np.min(histogram)
-            max = np.max(histogram)
-            var_min_max.append([variance, min, max])
-        var_min_max = np.array(var_min_max)
         histograms = np.sort(histograms)
-        self.asymptotic_normalizer = preprocessing.StandardScaler()
+        #self.asymptotic_normalizer = preprocessing.StandardScaler()
         #self.asymptotic_normalizer.fit_transform(histograms)
         self.asymptotic_learner.fit(histograms, thresholds)
         return

@@ -13,7 +13,7 @@ initial_pi_values = np.ones(bins_number)/bins_number
 class Quant_garden:
 
     def __init__(self, K, statistic, nu, alpha, beta, bins_number, min_N, max_N, uses_double_check):
-        #nodes = 200
+        nodes = 200
         self.K = K
         self.garden =  np.empty(K, dtype = aux.Extended_Quant_Tree) #The trees
         self.batch_on_trial = None
@@ -22,10 +22,10 @@ class Quant_garden:
         self.nu = nu
         self.alpha = alpha # FP0 for the last tree
         self.uses_double_check = uses_double_check
-        #self.last_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for standard test
-        #self.last_neural.train(self.alpha)  #Verificare che la NN usi l'alhpa giusto
-        #self.hidden_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for the hidden tests, with alpha2
-        #self.hidden_neural.train(0.5)
+        self.last_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for standard test
+        self.last_neural.train(self.alpha)  #Verificare che la NN usi l'alhpa giusto
+        self.hidden_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for the hidden tests, with alpha2
+        self.hidden_neural.train(0.5)
         #TODO VA ADDESTRATA UNA SECONDA RETE NEURALE CON ALPHA = 0.5, modidicare il codice di accesso ai file
         self.status = 0 #Wether the algorithm is already fully running
         self.beta = beta # FP0 for hidden testing
@@ -53,8 +53,9 @@ class Quant_garden:
             if self.uses_double_check:
                 self.hidden_thresholds[index] = copy(self.hidden_thresholds[index + 1])
         if self.uses_double_check:
-            self.hidden_thresholds[-1] = qt.ChangeDetectionTest(new_tree, self.nu, self.statistic).\
-                estimate_quanttree_threshold(self.beta, 4000)
+            self.hidden_thresholds[-1] = self.hidden_neural.predict_value(np.sort(new_tree.pi_values), new_tree.ndata)
+            #self.hidden_thresholds[-1] = qt.ChangeDetectionTest(new_tree, self.nu, self.statistic).\
+                #estimate_quanttree_threshold(self.beta, 4000)
         self.garden[-1] = new_tree
         return
 
@@ -62,17 +63,20 @@ class Quant_garden:
         ndata = self.garden[-1].ndata
         number_of_points = 4000
         histogram = self.garden[-1].pi_values
-        #histogram = np.sort(histogram)
-        #threshold = self.last_neural.predict_value(histogram, ndata)
+        histogram = np.sort(histogram)
+        threshold = self.last_neural.predict_value(histogram, ndata)
+        """
         to_average = 1
         threshold = 0
         add_vector = []
         for index in range (to_average):
             to_add = qt.ChangeDetectionTest\
                 (self.garden[-1],self.nu, self.statistic).estimate_quanttree_threshold(self.alpha, number_of_points)
+
             threshold = threshold + to_add
             add_vector.append(to_add)
         threshold = threshold/to_average
+        """
         stat = self.statistic(self.garden[-1], batch)
         if stat > threshold:
              (stat, threshold)
@@ -109,7 +113,8 @@ class Quant_garden:
     def secondly_refuse(self):
         value = np.sum(self.table[0])
         if value > self.binomial_treshold:
-            print ('ciao')
+            #print ('ciao')
+            x = 0
         return value > self.binomial_treshold
 
     def first_rounds(self, batch):
@@ -118,10 +123,12 @@ class Quant_garden:
             tree.build_histogram(batch)
             self.garden[-1] = tree
         else: #Not first, but before K
-            immediately_refused = self.test_batch(batch)
-            if immediately_refused:
-                self.restart()
-                return True
+            if not self.uses_double_check:
+                immediately_refused = self.test_batch(batch)
+                if immediately_refused:
+                    self.restart()
+                    return True
+
             tree = copy(self.garden[-1])
             tree.modify_histogram(batch)
             for index in range(self.K - 1):
@@ -146,7 +153,7 @@ class Quant_garden:
             self.perform_hidden_tests(batch)
         if immediately_refused:
             self.restart()
-            print('Immediately')
+            #print('Immediately')
 
             return True
 
@@ -154,7 +161,7 @@ class Quant_garden:
             refused = self.secondly_refuse()
             if refused:
                 self.restart()
-                print('Secondarly')
+                #('Secondarly')
                 return True
 
         if not self.batch_on_trial is None:
