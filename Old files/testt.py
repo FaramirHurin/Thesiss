@@ -1,10 +1,11 @@
-import auxilium as aux
-import auxilium_test as aux_test
+import extendedQuantTree as aux
+from tests import auxilium_test as aux_test
 import libquanttree as qt
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
+
+import neuralNetworks
 
 percentage = 0.01
 bins_number = 8
@@ -99,7 +100,7 @@ def observe_growing_asymptpotic_B(bins, B_values, N, experiments_number):
 
 #We proved that the crazy high values are sistematic
 def try_asymptotic_correctness():
-    man = aux.NN_man(bins_number, 100, 10, 20)
+    man = neuralNetworks.NN_man(bins_number, 100, 10, 20)
     histograms, thresholds = man.retrieve_asymptotic_dataSet()
     for count in range(len(thresholds)):
         threshold = thresholds[count]
@@ -110,20 +111,20 @@ def try_asymptotic_correctness():
             print(threshold, thr)
 
 def test_histogram_with_bins(bins, truth):
-    superman = aux.Superman(percentage=0.01,  SKL = 4, initial_pi_values = bins, data_number = 5000,
-                 alpha = alpha, bins_number = bins_number, data_Dimension = 3, nu = nu, B = B, statistic = statistic, max_N = 1000,
-                 data_number_for_learner = 100)
+    superman = superman.Superman(percentage=0.01, SKL = 4, initial_pi_values = bins, data_number = 5000,
+                                 alpha = alpha, bins_number = bins_number, data_Dimension = 3, nu = nu, B = B, statistic = statistic, max_N = 1000,
+                                 data_number_for_learner = 100)
     superman.create_training_set_for_QT()
-    superman2 = aux.Superman(percentage=0.01,  SKL = 4, initial_pi_values = aux_test.initial_pi_values, data_number = 5000,
-                 alpha = alpha, bins_number = bins_number, data_Dimension = 3, nu = nu, B = B, statistic = statistic, max_N = 1000,
-                 data_number_for_learner = 100)
+    superman2 = superman.Superman(percentage=0.01, SKL = 4, initial_pi_values = aux_test.initial_pi_values, data_number = 5000,
+                                  alpha = alpha, bins_number = bins_number, data_Dimension = 3, nu = nu, B = B, statistic = statistic, max_N = 1000,
+                                  data_number_for_learner = 100)
     superman2.create_training_set_for_QT()
     return superman.run_normal_algorithm(5000, truth), superman2.run_normal_algorithm(5000, truth)
 
 #Confirmed: histograms correlated with high (asymptotic) thresholds makes the model have a bad performance
 def control_high_thresholds():
     print('Ciao')
-    man = aux.NN_man(bins_number, 100, 10, 20)
+    man = neuralNetworks.NN_man(bins_number, 100, 10, 20)
     histograms, thresholds = man.retrieve_asymptotic_dataSet()
     for count in range(len(thresholds)):
         threshold = thresholds[count]
@@ -135,7 +136,7 @@ def control_high_thresholds():
             print('FP0s are ' + str(FP0s))
 
 def try_normal_correctness():
-    man = aux.NN_man(bins_number, 100, 10, 20)
+    man = neuralNetworks.NN_man(bins_number, 100, 10, 20)
     histograms, thresholds = man.retrieve_asymptotic_dataSet()
     histograms = np.delete(histograms, -1, 1)
     for count in range(len(thresholds)):
@@ -150,7 +151,7 @@ def try_normal_correctness():
 #Sembrerebbe esserci una correlazione molto forte tra gli outliers e il minimo bin molto piccolo
 def test_high_thresholds_histograms():
     print('Ciao')
-    man = aux.NN_man(bins_number, 100, 10, 20)
+    man = neuralNetworks.NN_man(bins_number, 100, 10, 20)
     histograms, thresholds = man.retrieve_asymptotic_dataSet()
     mins = []
     variances = []
@@ -167,7 +168,7 @@ def test_high_thresholds_histograms():
 
 #Tests the R2 of the predictions made by the NN
 def test_asymptotic_training(number_of_experiments):
-    man = aux.NN_man(bins_number, 20, 1000, 1000)
+    man = neuralNetworks.NN_man(bins_number, 20, 1000, 1000)
     man.asymptotic_train()
     thresholds = []
     predictions = []
@@ -183,7 +184,7 @@ def test_asymptotic_training(number_of_experiments):
     print(predictions)
 
 def test_normal_training(number_of_experiments, minN, maxN):
-    man = aux.NN_man(bins_number, 1000, 50, 120)
+    man = neuralNetworks.NN_man(bins_number, 1000, 50, 120)
     man.normal_train()
     thresholds = []
     predictions = []
@@ -205,9 +206,9 @@ def test_normal_training(number_of_experiments, minN, maxN):
 
 
 def compare_FP0s(algorithms, number_of_experiments, batches_per_experiment):
-    superman = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
-                 data_number_for_learner)
+    superman = superman.Superman(percentage, SKL, initial_pi_values, data_number,
+                                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+                                 data_number_for_learner)
     results = np.zeros([number_of_experiments, len(algorithms)])
     for counter in range(number_of_experiments):
         superman.create_training_set_for_QT()
@@ -234,9 +235,9 @@ def compare_FP0s(algorithms, number_of_experiments, batches_per_experiment):
 
 
 def compare_powers(algorithms, number_of_experiments, batches_per_experiment, SKL):
-    superman = aux.Superman(percentage, SKL, initial_pi_values, data_number,
-                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
-                 data_number_for_learner)
+    superman = superman.Superman(percentage, SKL, initial_pi_values, data_number,
+                                 alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+                                 data_number_for_learner)
     results = np.zeros([number_of_experiments, len(algorithms)])
     for counter in range(number_of_experiments):
         superman.create_training_set_for_QT()

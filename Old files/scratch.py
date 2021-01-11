@@ -6,7 +6,6 @@
 import numpy as np
 import libquanttree as qt
 import libccm as ccm
-import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPRegressor
 import pandas as pd
 

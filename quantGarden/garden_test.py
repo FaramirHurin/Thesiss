@@ -1,22 +1,21 @@
-import libquanttree as qt
+import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import quant_garden as gard
-import auxilium as aux
-import libccm as ccm
-import auxilium_test as aux_test
+from quantGarden import quant_garden as gard
+import extendedQuantTree as aux
+import pandas as pd
 
 #WE ARE TESTING WITH NU = 32
 
-bins_number = 16 #8
-dimension_number = 6
+bins_number = 8 #8
+dimension_number = 4
 nu = 16
 statistic = qt.tv_statistic
 alpha = [0.01]
 K = 30 #Number of trees to keep in the garden
 beta = [0.5]
-min_N = aux_test.min_N
-max_N = aux_test.max_N
+min_N = nu
+max_N = 10000
 initial_pi_values = np.ones(bins_number)/bins_number
 gard.bins_number = bins_number
 gard.initial_pi_values = np.ones(bins_number)/bins_number
@@ -52,7 +51,7 @@ def test_ARL0(check_garden):
         stop_time += 1
         if stop_time > 6000:
             break
-    print('stop time ' + str(stop_time))
+    #print('stop time ' + str(stop_time))
     return stop_time
 
 
@@ -151,5 +150,13 @@ def plot_ARL1(points_to_plot, change_time, SKL):
     return
 
 #print(str(statistic.__name__) + ': expected = ' + str(1/alpha[0]))
-plot_ARL1(40, 20, 0.3)
-print ('sk = 1')
+#plot_ARL1(40, 20, 0.3)
+#print ('sk = 1')
+vect = np.zeros([20, 2])
+for elem in vect:
+    elem[0] = test_ARL0(False)
+    elem[1] = test_ARL0(True)
+frame = pd.DataFrame(vect)
+print(frame.head(5))
+print ('We are using NN and 4 elements')
+print(frame.describe())

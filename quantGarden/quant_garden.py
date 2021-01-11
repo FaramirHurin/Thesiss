@@ -1,10 +1,9 @@
-import libquanttree as qt
-import auxilium as aux
+import qtLibrary.libquanttree as qt
+import extendedQuantTree as aux
 import numpy as np
-import scipy as sc
-import matplotlib.pyplot as plt
-import auxilium_test as aux_test
 from copy import copy
+
+import neuralNetworks
 
 bins_number = 4
 initial_pi_values = np.ones(bins_number)/bins_number
@@ -22,9 +21,10 @@ class Quant_garden:
         self.nu = nu
         self.alpha = alpha # FP0 for the last tree
         self.uses_double_check = uses_double_check
-        self.last_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for standard test
+        # We might pickle an already trained NN, at least for tests
+        self.last_neural = neuralNetworks.NN_man(bins_number, max_N, min_N, nodes) #for standard test
         self.last_neural.train(self.alpha)  #Verificare che la NN usi l'alhpa giusto
-        self.hidden_neural = aux.NN_man(bins_number, max_N, min_N, nodes) #for the hidden tests, with alpha2
+        self.hidden_neural = neuralNetworks.NN_man(bins_number, max_N, min_N, nodes) #for the hidden tests, with alpha2
         self.hidden_neural.train(0.5)
         #TODO VA ADDESTRATA UNA SECONDA RETE NEURALE CON ALPHA = 0.5, modidicare il codice di accesso ai file
         self.status = 0 #Wether the algorithm is already fully running

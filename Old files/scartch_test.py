@@ -1,4 +1,3 @@
-import scratch
 from scratch import *
 import pandas
 
@@ -377,5 +376,5 @@ def test_regressor():
 #hist = [0.0003337097421917848,0.07790243972968347,0.26157786184878684,0.6601859886793379]
 #test_particular_histogram(hist)
 #print(analyzeDataSet())
-test_FP0()
+#test_FP0()
 #test_regressor()
