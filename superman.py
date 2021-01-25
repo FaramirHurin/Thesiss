@@ -1,6 +1,7 @@
 import qtLibrary.libquanttree as qt
 from extendedQuantTree import Data_set_Handler, Extended_Quant_Tree, Alternative_threshold_computation
 from neuralNetworks import NN_man
+import numpy as np
 
 #Main interface to use and run experiments on extended QuantTree
 class Superman:
@@ -41,6 +42,25 @@ class Superman:
             y = self.statistic(tree, batch)
             value += y > thr
         return value / number_of_experiments
+
+    def run_normal_EMWA(self, time, lambd, equal = True):
+        tree = qt.QuantTree(self.initial_pi_values)
+        tree.build_histogram(self.data_set)
+        assert (tree.ndata == len(self.data_set))
+        test = qt.ChangeDetectionTest(tree, self.nu, self.statistic)
+        thr = test.estimate_quanttree_threshold(self.alpha, self.B)
+        value = 0
+        statistics = np.zeros(time)
+        statistics[0] = self.alpha[0]
+        for counter in range(1, time):
+            if equal:
+                batch = self.handler.return_equal_batch(self.nu)
+            else:
+                batch = self.handler.generate_similar_batch(self.nu, self.SKL)
+            statistics[counter] = statistics[counter -1] * (1 -lambd) + \
+                                  lambd * (self.statistic(tree, batch) > thr)
+        return statistics
+
 
     def run_modified_algorithm_without_learner(self, number_of_experiments, equal = True):
         initial_db_size = int(len(self.data_set)*self.percentage)
@@ -84,12 +104,11 @@ class Superman:
             if equal:
                 batch = self.handler.return_equal_batch(self.nu)
             else:
-                batch = self.handler.return_equal_batch(self.nu, self.SKL)
+                batch = self.handler.return_equal_batch(self.nu)
             y = self.statistic(tree, batch)
             value += y > thr
 
         return value / number_of_experiments
-
 
         #Uses as a prediction for the threshold the average of the thesholds in the DataBase
 

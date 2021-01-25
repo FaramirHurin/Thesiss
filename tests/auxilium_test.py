@@ -1,25 +1,28 @@
 import extendedQuantTree as aux
-import dynamicQuantTree
+import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
+import logging, sys
 
 #HYPERPARAMETERS
 import neuralNetworks
 import superman
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-percentage = 0.1
+percentage = 0.03
 bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
-data_number = 200
-alpha = [0.01]
+data_number = 1000
+alpha = [0.5]
+beta = 0.1
 data_Dimension = 3
 nu = 32
 B = 3000
-statistic = qt.tv_statistic
+statistic = qt.pearson_statistic
 X = [3]
 data_number_for_learner = 10000
-max_N = bins_number
+max_N = 3000
 min_N = nu
 SKL = 1
 
@@ -29,25 +32,35 @@ SKL = 1
 
 #Compare FP0 between QT and Extended QT without NN
 def compare_FP0(SKL):
-    number_of_tests_for_the_plot = 10
+    number_of_tests_for_the_plot = 50
     normal_to_plot = []
-    modified_to_plot = []
+    pearson_to_plot = []
+    tv_to_plot = []
     number_of_batches_per_test = 2000
 
-    test = superman.Superman(percentage, SKL, initial_pi_values, data_number,
-                             alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
+    test_pearson = superman.Superman(percentage, SKL, initial_pi_values, data_number,
+                             alpha, bins_number, data_Dimension, nu, B, qt.pearson_statistic, max_N,
                              data_number_for_learner)
+    test_tv = superman.Superman(percentage, SKL, initial_pi_values, data_number,
+                                     alpha, bins_number, data_Dimension, nu, B, qt.tv_statistic, max_N,
+                                     data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
-        test.create_training_set_for_QT()
+        test_pearson.create_training_set_for_QT()
+        test_tv.create_training_set_for_QT()
         normal_value = 0
-        modified_value = 0
-        result = test.run_modified_algorithm_without_learner(number_of_batches_per_test)
-        modified_value += result[0]
-        normal_value += result[1]
-        normal_to_plot.append(1 - normal_value)
-        modified_to_plot.append(1 - modified_value)
-    plt.boxplot([normal_to_plot, modified_to_plot], labels=['normal', 'modified'])
-    plt.title('FPO: normal and extended')
+        pearson_value = 0
+        tv_value = 0
+        pearson_result = test_pearson.run_modified_algorithm_without_learner(number_of_batches_per_test)
+        tv_result = test_tv.run_modified_algorithm_without_learner(number_of_batches_per_test)
+        pearson_value += pearson_result[0]
+        normal_value += pearson_result[1]
+        tv_value += tv_result[0]
+        normal_to_plot.append(normal_value)
+        pearson_to_plot.append(pearson_value)
+        tv_to_plot.append(tv_value)
+
+    plt.boxplot([normal_to_plot, pearson_to_plot, tv_to_plot], labels=['normal', 'pearson', 'tv'])
+    plt.title('FPR')
     plt.show()
     return
 
@@ -140,7 +153,7 @@ def compare_power_with_asymptotic(SKL):
 
 #Compare FP0 between QT and Extended QT with NN
 def compare_regressor_FP0(SKL):
-    number_of_tests_for_the_plot = 50
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 3000
@@ -164,7 +177,7 @@ def compare_regressor_FP0(SKL):
 
 #Compare power between QT and Extended QT without NN
 def compare_regressor_power(SKL):
-    number_of_tests_for_the_plot = 40
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 1000
@@ -193,43 +206,8 @@ def store_datestets():
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.01], 5000)
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.5], 5000)
 
-#Dynamic QuantTree tests
 
-#Plots the EWMA value of one run.
-def test_EWMA_once(run_lenght):
-    data = aux.Data_set_Handler(data_Dimension)
-    statistics = np.zeros(run_lenght)
-    x = dynamicQuantTree.DynamicQuantTree(initial_pi_values, 0.3, qt.tv_statistic, 1000, 100, alpha, False, False)
-    for round in range(run_lenght):
-        batch = data.return_equal_batch(nu)
-        statistics[round] = x.playRound(batch)[0]
-    return statistics
-
-#Averages over multiple runs. We expect the EWMA to be around alpha for every time T
-def test_EWMA():
-    print('ciao')
-    experiments_number = 200
-    run_lenght =1000
-    statistics = np.zeros(run_lenght)
-    for exp in range(experiments_number):
-        statistics = statistics + test_EWMA_once(run_lenght)
-    statistics = statistics/experiments_number
-    plt.plot(range(len(statistics)), statistics)
-    plt.title('stat value')
-    plt.show()
-
-def plot_EWMA_ARL0(max_run_lenght):
-    data = aux.Data_set_Handler(data_Dimension)
-    statistics = np.zeros(max_run_lenght)
-    x = dynamicQuantTree.DynamicQuantTree(initial_pi_values, 0.3, qt.tv_statistic, 1000, 100, alpha, True, False)
-    for round in range(max_run_lenght):
-        batch = data.return_equal_batch(nu)
-        statistics[round], stop = x.playRound(batch)
-        if stop:
-            break
-    return round
-
-def plot_EWMA_ARL1(SKL, max_run_lenght):
-    return
-
-test_EWMA()
+compare_FP0(1)
+compare_power(1)
+compare_regressor_FP0(1)
+compare_regressor_power(1)

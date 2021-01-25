@@ -1,4 +1,4 @@
-from scratch import *
+from old_files.scratch import *
 import pandas
 
 def test_FP0():

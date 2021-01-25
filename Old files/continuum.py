@@ -1,8 +1,8 @@
 
 
-from scratch import *
+from old_files.scratch import *
 import numpy as np
-import libquanttree as qt
+import qtLibrary.libquanttree as qt
 import pandas as pd
 import matplotlib.pyplot as plt
 

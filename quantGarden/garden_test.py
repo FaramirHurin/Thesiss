@@ -4,14 +4,17 @@ import matplotlib.pyplot as plt
 from quantGarden import quant_garden as gard
 import extendedQuantTree as aux
 import pandas as pd
+import logging, sys
+
 
 #WE ARE TESTING WITH NU = 32
-
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 bins_number = 8 #8
 dimension_number = 4
 nu = 16
 statistic = qt.tv_statistic
 alpha = [0.01]
+inner_alpha = 0.01
 K = 30 #Number of trees to keep in the garden
 beta = [0.5]
 min_N = nu
@@ -20,7 +23,32 @@ initial_pi_values = np.ones(bins_number)/bins_number
 gard.bins_number = bins_number
 gard.initial_pi_values = np.ones(bins_number)/bins_number
 
+#Tests on FPR
 
+#Checks FPR of the paired learner is what we want it to be
+def plot_hidden_alpha():
+    handler = aux.Data_set_Handler(dimension_number)
+    false_positive = 0
+    stop_time = 0
+    check_garden = True
+    hidden_positives = 0
+    number_of_runs = 10000
+    effective_runs = number_of_runs
+    garden = gard.Quant_garden(K, statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden, inner_alpha)
+    for index in range(number_of_runs):
+        batch = handler.return_equal_batch(nu)
+        status = garden.status
+        false_positive = garden.play_round(batch)
+        if false_positive:
+            logging.debug('stopped at' + str(status))
+            effective_runs = effective_runs - K
+        garden.last_hidden_prediction += garden.last_hidden_prediction
+    print(alpha, hidden_positives/effective_runs)
+    return
+
+#Tests on ARL0
+
+#How long lasts a run of a standard QT?
 def test_qt_ARLO0():
     handler = aux.Data_set_Handler(dimension_number)
     false_positive = 0
@@ -40,11 +68,13 @@ def test_qt_ARLO0():
     print('stop time classic QT' + str(stop_time))
     return stop_time
 
+#How long lasts a run of the consontuously modifying QT?
+# checkGarden controls wether we want to use the paired learner
 def test_ARL0(check_garden):
     handler = aux.Data_set_Handler(dimension_number)
     false_positive = 0
     stop_time = 0
-    garden = gard.Quant_garden(K,statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden)
+    garden = gard.Quant_garden(K,statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden, inner_alpha)
     while false_positive == 0:
         batch = handler.return_equal_batch(nu)
         false_positive = garden.play_round(batch)
@@ -54,29 +84,30 @@ def test_ARL0(check_garden):
     #print('stop time ' + str(stop_time))
     return stop_time
 
+#Plot the ARL0 of both normal QT and garden
+def plot_ARL0(points_to_plot, check_garden):
+    logging.debug('Start')
+    garden_points = []
+    normal_points = []
+    for index in range(points_to_plot):
+        garden_points.append(test_ARL0(check_garden))
+        normal_points.append(test_qt_ARLO0())
+    fig, axs = plt.subplots(2)
+    axs[0].boxplot(garden_points, notch=False, showfliers  = False)
+    axs[0].set_title('Garden ARLO-tv')
+    axs[0].legend('We were checking: ' + str(check_garden))
+    axs[1].boxplot(normal_points, notch=False, showfliers  = False)
+    axs[1].set_title('Normal ARL0-tv')
+    plt.show()
 
-def test_ARL1(change_time, SKL,check_garden):
-    handler = aux.Data_set_Handler(dimension_number)
-    positive = 0
-    time = 0
-    garden = gard.Quant_garden(K, statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden)
-    while positive == 0:
-        if time < change_time:
-            batch = handler.return_equal_batch(nu)
-            false_positive = garden.play_round(batch)
-        else:
-            batch = handler.generate_similar_batch(nu, SKL)
-            positive = garden.play_round(batch)
-        time += 1
-        if time > 6000:
-            break
-    if time < change_time:
-        print ('False positive')
-    print('stop time ' + str(time - change_time))
-    if time > change_time:
-        return time - change_time
-    else:
-        return 100 #penalty
+    print (' Normal mean-t' +str(np.mean(normal_points)))
+    print ('Garden mean-t' + str(np.mean(garden_points)))
+    print ('Normal median - t ' + str(np.median(normal_points)))
+    print ('Garden median - t ' + str(np.median(garden_points)))
+
+    return
+
+#Tests on ARL1
 
 def test_QT_ARL1(change_time, SKL):
     handler = aux.Data_set_Handler(dimension_number)
@@ -99,34 +130,35 @@ def test_QT_ARL1(change_time, SKL):
         if time > 6000:
             break
     if time < change_time:
-        print ('False positive QT')
+        print('False positive QT')
     print('stop time QT' + str(time - change_time))
     if time > change_time:
         return time - change_time
     else:
         return 100
 
-def plot_ARL0(points_to_plot, check_garden):
-    print('Start')
-    garden_points = []
-    normal_points = []
-    for index in range(points_to_plot):
-        garden_points.append(test_ARL0(check_garden))
-        normal_points.append(test_qt_ARLO0())
-    fig, axs = plt.subplots(2)
-    axs[0].boxplot(garden_points, notch=False, showfliers  = False)
-    axs[0].set_title('Garden ARLO-tv')
-    axs[0].legend('We were checking: ' + str(check_garden))
-    axs[1].boxplot(normal_points, notch=False, showfliers  = False)
-    axs[1].set_title('Normal ARL0-tv')
-    plt.show()
-
-    print (' Normal mean-t' +str(np.mean(normal_points)))
-    print ('Garden mean-t' + str(np.mean(garden_points)))
-    print ('Normal median - t ' + str(np.median(normal_points)))
-    print ('Garden median - t ' + str(np.median(garden_points)))
-
-    return
+def test_ARL1(change_time, SKL,check_garden):
+    handler = aux.Data_set_Handler(dimension_number)
+    positive = 0
+    time = 0
+    garden = gard.Quant_garden(K, statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden, inner_alpha)
+    while positive == 0:
+        if time < change_time:
+            batch = handler.return_equal_batch(nu)
+            false_positive = garden.play_round(batch)
+        else:
+            batch = handler.generate_similar_batch(nu, SKL)
+            positive = garden.play_round(batch)
+        time += 1
+        if time > 6000:
+            break
+    if time < change_time:
+        print ('False positive')
+    print('stop time ' + str(time - change_time))
+    if time > change_time:
+        return time - change_time
+    else:
+        return 100 #penalty
 
 def plot_ARL1(points_to_plot, change_time, SKL):
     print('Start')
@@ -149,14 +181,8 @@ def plot_ARL1(points_to_plot, change_time, SKL):
 
     return
 
-#print(str(statistic.__name__) + ': expected = ' + str(1/alpha[0]))
-#plot_ARL1(40, 20, 0.3)
-#print ('sk = 1')
-vect = np.zeros([20, 2])
-for elem in vect:
-    elem[0] = test_ARL0(False)
-    elem[1] = test_ARL0(True)
-frame = pd.DataFrame(vect)
-print(frame.head(5))
-print ('We are using NN and 4 elements')
-print(frame.describe())
+plot_hidden_alpha()
+plot_ARL0(100, False)
+plot_ARL0(100, True)
+plot_ARL1(100, 50, False)
+plot_ARL1(100, 50, True)

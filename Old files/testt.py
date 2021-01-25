@@ -1,6 +1,6 @@
 import extendedQuantTree as aux
-from tests import auxilium_test as aux_test
-import libquanttree as qt
+import thesis_tests.auxilium_test as aux_test
+import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score

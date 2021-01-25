@@ -4,8 +4,8 @@
 #Interfaces: Threshold_handler_interface must be a common interface for both Thresholds_numerical_procedure and Regressor
 
 import numpy as np
-import libquanttree as qt
-import libccm as ccm
+import qtLibrary.libquanttree as qt
+import qtLibrary.libccm as ccm
 from sklearn.neural_network import MLPRegressor
 import pandas as pd
 

@@ -3,7 +3,9 @@ import pandas as pd
 from sklearn import neural_network as nn
 import qtLibrary.libquanttree as qt
 from extendedQuantTree import create_bins_combination, Alternative_threshold_computation
+import logging, sys
 
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class DataSet_for_the_learner:
 
@@ -111,11 +113,11 @@ class NN_man:
             alpha = alpha[0]
         #df = pd.read_csv('File ending with N and thr')
         if alpha == 0.01:
-            df = pd.read_csv('learner_dataset/File_N_and_thr_0_01')
+            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\File_N_and_thr_0_01')
         elif alpha == 0.5:
-            df = pd.read_csv('learner_dataset/File_N_and_thr_0_5')
+            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\File_N_and_thr_0_5')
         else:
-            raise Exception('alpha is wrong, expected 0.1 or 0.5, got' + str(alpha))
+            raise Exception('alpha is wrong, expected 0.01 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()
         thresholds = df_numpy[:, -2]
         histograms = np.delete(df_numpy, -2, 1)
@@ -126,9 +128,9 @@ class NN_man:
         if not isinstance(alpha, float):
             alpha = alpha[0]
         if alpha == 0.01:
-            df = pd.read_csv('learner_dataset/Asymptotic_0._1')
+            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\Asymptotic_0._1')
         elif alpha == 0.5:
-            df = pd.read_csv('learner_dataset/Asymptotic_0_5')
+            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\Asymptotic_0_5')
         else:
             raise Exception('alpha is wrong, expected 0.1 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()
@@ -141,7 +143,8 @@ class NN_man:
         histograms_with_N, thresholds = self.retrieve_normal_dataSet(alpha)
         histograms_with_N = np.sort(histograms_with_N)
         self.standard_learner.fit(histograms_with_N, thresholds)
-        print(self.standard_learner.best_validation_score_)
+        logging.debug('alpha is ' + str(alpha) + ' best normal validation score is' +
+                      str(self.standard_learner.best_validation_score_))
         return
 
     def asymptotic_train(self, alpha):
@@ -150,7 +153,8 @@ class NN_man:
         #self.asymptotic_normalizer = preprocessing.StandardScaler()
         #self.asymptotic_normalizer.fit_transform(histograms)
         self.asymptotic_learner.fit(histograms, thresholds)
-        print(self.asymptotic_learner.best_validation_score_)
+        logging.debug('alpha is ' + str(alpha) + ' best asymptotic validation score is' +
+                      str(self.asymptotic_learner.best_validation_score_))
         return
 
     def train(self, alpha):
