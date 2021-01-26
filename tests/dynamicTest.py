@@ -6,16 +6,15 @@ import matplotlib.pyplot as plt
 import logging, sys
 import superman as sup
 
-percentage = 0.1
+percentage = 0.01
 bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
-data_number = 200
+data_number = 2000
 alpha = [0.5]
 beta = 0.5
 data_Dimension = 3
 nu = 32
 B = 4000
-statistic = qt.pearson_statistic
 X = [3]
 max_N = 3000
 min_N = nu
@@ -25,31 +24,36 @@ SKL = 1
 #Dynamic QuantTree tests
 
 #Plots the EWMA value of one run.
-def test_EWMA_once(run_lenght, beta):
+def test_EWMA_once(run_lenght, beta, statistic):
     data_handler = aux.Data_set_Handler(data_Dimension)
-    data = data_handler.return_equal_batch(nu * 2)
+    data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
-    x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, 0.1, qt.tv_statistic, 1000, 100, alpha, False, False, nu, beta)
+    lambd = 0.002
+    x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, 1000, 100, alpha, False, False, nu, beta)
     x.initialize(data)
     for round in range(run_lenght):
         batch = data_handler.return_equal_batch(nu)
         statistics[round] = x.compute_EMWA(batch)
+    print(statistics)
     return statistics
 
 # EMWA threshold is correct. What does it mean?
 #Taking random points of independent runs the EMWA is higher than the threshold with probability alpha
 
 #Averages over multiple runs. We expect the EWMA to be around alpha for every time T
-def test_EWMA(experiments_number, run_lenght, beta):
+def test_EWMA(experiments_number, run_lenght, beta, statistic):
     statistics = np.zeros(run_lenght)
     for exp in range(experiments_number):
-        to_add =  test_EWMA_once(run_lenght, beta)
+        to_add =  test_EWMA_once(run_lenght, beta, statistic)
         statistics = statistics + to_add
         logging.debug('statistics of current run' + str(statistic))
     statistics = statistics/experiments_number
-    plt.plot(range(len(statistics)), statistics)
-    plt.title('stat value: ' + str(statistic))
-    plt.show()
+    if statistic == qt.pearson_statistic:
+        color = 'r'
+    else:
+        color = 'b'
+    plt.plot(range(len(statistics)), statistics, color)
+    plt.title('stat values: r = pearson, b = TV')
 
 def test_dynamic_ARL0(max_run_lenght, beta):
     data = aux.Data_set_Handler(data_Dimension)
@@ -104,9 +108,9 @@ for counter in range(10):
     y = x.tell_averaggio('normal', 4000)
     print(y, alpha)
 """
-superman = sup.Superman(percentage, SKL, initial_pi_values, data_number,
-                             alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
-                             50000)
-
-
-test_EWMA(100, 10, 0.3)
+for index in range(10):
+    statistic = qt.tv_statistic
+    test_EWMA(4, 20000, 0.1, statistic)
+    statistic = qt.pearson_statistic
+    test_EWMA(4, 20000, 0.1, statistic)
+    plt.show()

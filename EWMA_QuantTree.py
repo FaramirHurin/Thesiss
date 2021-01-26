@@ -29,7 +29,7 @@ class EWMA_QuantTree:
 
     def initialize(self, training_set):
         self.tree.build_histogram(training_set)
-        self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).estimate_quanttree_threshold(self.alpha, 6000)
+        self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).estimate_quanttree_threshold(self.alpha, 10000)
 
     # MC simulation
     def compute_EWMA_threshold(self, nu):
