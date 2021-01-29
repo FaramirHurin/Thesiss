@@ -3,10 +3,8 @@ import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import logging, sys
 import superman as sup
 
-percentage = 0.01
 bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
 data_number = 2000
@@ -23,19 +21,30 @@ SKL = 1
 
 #Dynamic QuantTree tests
 
+def run_normally(run_lenght, beta, statistic):
+    data_handler = aux.Data_set_Handler(data_Dimension)
+    data = data_handler.return_equal_batch(500)
+    statistics = np.zeros(run_lenght)
+    lambd = 0.1
+    x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, max_N, 100, alpha, False, False, nu, beta)
+    x.initialize(data)
+    for round in range(run_lenght):
+        batch = data_handler.return_equal_batch(nu)
+        statistics[round] = x.classic_batch_analysis(batch)
+    return np.mean(statistics)
+
 #Plots the EWMA value of one run.
 def test_EWMA_once(run_lenght, beta, statistic):
     data_handler = aux.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
     lambd = 0.002
-    x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, 1000, 100, alpha, False, False, nu, beta)
+    x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, max_N, 100, alpha, False, False, nu, beta)
     x.initialize(data)
     for round in range(run_lenght):
         batch = data_handler.return_equal_batch(nu)
         statistics[round] = x.compute_EMWA(batch)
-    print(statistics)
-    return statistics
+    return statistics, np.mean(x.record_history)
 
 # EMWA threshold is correct. What does it mean?
 #Taking random points of independent runs the EMWA is higher than the threshold with probability alpha
@@ -43,11 +52,14 @@ def test_EWMA_once(run_lenght, beta, statistic):
 #Averages over multiple runs. We expect the EWMA to be around alpha for every time T
 def test_EWMA(experiments_number, run_lenght, beta, statistic):
     statistics = np.zeros(run_lenght)
+    record_history = np.zeros(run_lenght)
     for exp in range(experiments_number):
-        to_add =  test_EWMA_once(run_lenght, beta, statistic)
+        to_add, record_history_to_add =  test_EWMA_once(run_lenght, beta, statistic)
+        record_history = record_history + np.array(record_history_to_add)
         statistics = statistics + to_add
-        logging.debug('statistics of current run' + str(statistic))
     statistics = statistics/experiments_number
+    record_history = record_history/experiments_number
+    print(np.mean(record_history))
     if statistic == qt.pearson_statistic:
         color = 'r'
     else:
@@ -107,10 +119,10 @@ x = dynamicQuantTree.Static_EMWA_QuantTree\
 for counter in range(10):
     y = x.tell_averaggio('normal', 4000)
     print(y, alpha)
-"""
+
 for index in range(10):
-    statistic = qt.tv_statistic
-    test_EWMA(4, 20000, 0.1, statistic)
-    statistic = qt.pearson_statistic
-    test_EWMA(4, 20000, 0.1, statistic)
-    plt.show()
+    print ('Value is' + str(run_normally()))
+"""
+
+test_EWMA(10,1500, 0.1, qt.pearson_statistic)
+test_EWMA(10,1500, 0.1, qt.tv_statistic)
