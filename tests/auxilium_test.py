@@ -3,25 +3,23 @@ import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import logging, sys
 
 #HYPERPARAMETERS
 import neuralNetworks
 import superman
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-percentage = 0.03
+percentage = 0.9
 bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
-data_number = 1000
+data_number = 500
 alpha = [0.5]
 beta = 0.1
 data_Dimension = 3
 nu = 32
-B = 3000
+B = 4000
 statistic = qt.pearson_statistic
 X = [3]
-data_number_for_learner = 10000
+data_number_for_learner = 600
 max_N = 3000
 min_N = nu
 SKL = 1
@@ -32,11 +30,11 @@ SKL = 1
 
 #Compare FP0 between QT and Extended QT without NN
 def compare_FP0(SKL):
-    number_of_tests_for_the_plot = 50
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     pearson_to_plot = []
     tv_to_plot = []
-    number_of_batches_per_test = 2000
+    number_of_batches_per_test = 6000
 
     test_pearson = superman.Superman(percentage, SKL, initial_pi_values, data_number,
                              alpha, bins_number, data_Dimension, nu, B, qt.pearson_statistic, max_N,
@@ -53,13 +51,14 @@ def compare_FP0(SKL):
         pearson_result = test_pearson.run_modified_algorithm_without_learner(number_of_batches_per_test)
         tv_result = test_tv.run_modified_algorithm_without_learner(number_of_batches_per_test)
         pearson_value += pearson_result[0]
-        normal_value += pearson_result[1]
+        normal_value += tv_result[1]
         tv_value += tv_result[0]
         normal_to_plot.append(normal_value)
         pearson_to_plot.append(pearson_value)
         tv_to_plot.append(tv_value)
 
-    plt.boxplot([normal_to_plot, pearson_to_plot, tv_to_plot], labels=['normal', 'pearson', 'tv'])
+    plt.boxplot([normal_to_plot, pearson_to_plot, tv_to_plot],
+                labels=['normal', 'pearson', 'tv'], showfliers=True, showmeans=True)
     plt.title('FPR')
     plt.show()
     return
@@ -201,13 +200,42 @@ def compare_regressor_power(SKL):
 def store_datestets():
     nodes = 3
     n = neuralNetworks.NN_man(bins_number, max_N, min_N, nodes)
-    #n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.01], 4000)
-    #n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.5], 4000)
+    n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.01], 4000)
+    n.store_normal_dataSet(data_number_for_learner, nu, statistic, [0.5], 4000)
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.01], 5000)
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.5], 5000)
 
 
-compare_FP0(1)
-compare_power(1)
-compare_regressor_FP0(1)
-compare_regressor_power(1)
+def single_alternative_FP0_comparison(batches, statistic):
+    values = np.zeros(batches)
+    pi_values = aux.create_bins_combination\
+        (len(initial_pi_values), 2 * len(initial_pi_values))
+    tree = aux.Extended_Quant_Tree(initial_pi_values)
+    data_generator = aux.Data_set_Handler(data_number)
+    training_set = data_generator.return_equal_batch(1000)
+    tree.build_histogram(training_set)
+    threshold = qt.ChangeDetectionTest(tree, nu, statistic).estimate_quanttree_threshold(alpha, B)
+    for index in range(batches):
+        batch = data_generator.return_equal_batch(nu)
+        values[index] = statistic(tree, batch) > threshold
+    return values
+
+
+def alternative_FP0_comparison(batches, points_to_plot):
+    box_pearson = np.zeros(points_to_plot)
+    box_tv = np.zeros(points_to_plot)
+    for index in range(points_to_plot):
+        pearson_value = np.mean(single_alternative_FP0_comparison(batches, qt.pearson_statistic))
+        print('Pearson: ' + str(pearson_value))
+
+        tv_value = np.mean(single_alternative_FP0_comparison(batches, qt.tv_statistic))
+        print('TV: ' + str(tv_value))
+
+        box_pearson[index] = pearson_value
+        box_tv[index] = tv_value
+
+    plt.boxplot([box_pearson, box_tv], labels=['Pearson', 'TV'])
+    plt.title('False Positive Rate: random pi_values - 8 bins')
+    plt.show()
+
+alternative_FP0_comparison(200, 20)
