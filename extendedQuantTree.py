@@ -99,8 +99,6 @@ def create_bins_combination(bins_number, minN):
     histogram = histogram / summa
     if minN == 0:
         return histogram
-    if min(histogram) < 1/minN :
-        return create_bins_combination(bins_number, minN)
     histogram = np.sort(histogram)
     return histogram
 

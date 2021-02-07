@@ -72,7 +72,7 @@ class Superman:
         test = qt.ChangeDetectionTest(tree, self.nu, self.statistic)
         thr = test.estimate_quanttree_threshold(self.alpha, self.B)
 
-        tree2 = qt.QuantTree(tree.pi_values)
+        tree2 = qt.QuantTree(self.initial_pi_values)
         tree2.build_histogram(self.data_set)
         test2 = qt.ChangeDetectionTest(tree2, self.nu, self.statistic)
         thr2 = test.estimate_quanttree_threshold(self.alpha, self.B)

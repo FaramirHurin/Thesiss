@@ -9,7 +9,7 @@ import neuralNetworks
 import superman
 
 percentage = 0.9
-bins_number = 8
+bins_number = 32
 initial_pi_values = np.ones(bins_number)/bins_number
 data_number = 500
 alpha = [0.5]
@@ -17,7 +17,7 @@ beta = 0.1
 data_Dimension = 3
 nu = 32
 B = 4000
-statistic = qt.pearson_statistic
+statistic = qt.tv_statistic
 X = [3]
 data_number_for_learner = 600
 max_N = 3000
@@ -238,4 +238,4 @@ def alternative_FP0_comparison(batches, points_to_plot):
     plt.title('False Positive Rate: random pi_values - 8 bins')
     plt.show()
 
-alternative_FP0_comparison(200, 20)
+compare_FP0(1)
