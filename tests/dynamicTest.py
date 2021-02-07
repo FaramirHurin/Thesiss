@@ -3,14 +3,14 @@ import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import superman as sup
 
-bins_number = 8
+bins_number = 16
 initial_pi_values = np.ones(bins_number)/bins_number
 data_number = 2000
 alpha = [0.5]
-beta = 0.5
-data_Dimension = 3
+beta = 0.1
+lambd = 0.01
+data_Dimension = 5
 nu = 32
 B = 4000
 X = [3]
@@ -25,7 +25,6 @@ def run_normally(run_lenght, beta, statistic):
     data_handler = aux.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
-    lambd = 0.1
     x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, max_N, 100, alpha, False, False, nu, beta)
     x.initialize(data)
     for round in range(run_lenght):
@@ -38,7 +37,6 @@ def test_EWMA_once(run_lenght, beta, statistic):
     data_handler = aux.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
-    lambd = 0.002
     x = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, statistic, max_N, 100, alpha, False, False, nu, beta)
     x.initialize(data)
     for round in range(run_lenght):
@@ -57,6 +55,7 @@ def test_EWMA(experiments_number, run_lenght, beta, statistic):
         to_add, record_history_to_add =  test_EWMA_once(run_lenght, beta, statistic)
         record_history = record_history + np.array(record_history_to_add)
         statistics = statistics + to_add
+        print(record_history_to_add)
     statistics = statistics/experiments_number
     record_history = record_history/experiments_number
     print(np.mean(record_history))
@@ -67,62 +66,29 @@ def test_EWMA(experiments_number, run_lenght, beta, statistic):
     plt.plot(range(len(statistics)), statistics, color)
     plt.title('stat values: r = pearson, b = TV')
 
-def test_dynamic_ARL0(max_run_lenght, beta):
-    data = aux.Data_set_Handler(data_Dimension)
-    statistics = np.zeros(max_run_lenght)
+def test_ARLO_once(run_lenght, statistic):
+    data_handler = aux.Data_set_Handler(data_Dimension)
+    data = data_handler.return_equal_batch(500)
+    statistics = np.zeros(run_lenght)
     x = EWMA_QuantTree.EWMA_QuantTree\
-        (initial_pi_values, 0.1, qt.tv_statistic, 1000, 100, alpha, True, False, nu, beta)
-    for round in range(max_run_lenght):
-        batch = data.return_equal_batch(nu)
-        statistics[round], stop = x.playRound(batch)
-        if stop:
+        (initial_pi_values, lambd, statistic, max_N, 100, alpha, False, False, nu, beta)
+    x.initialize(data)
+    for round in range(run_lenght):
+        batch = data_handler.return_equal_batch(nu)
+        statistics[round] = x.compute_EMWA(batch)
+        if x.find_change():
             break
     return round
 
-#Checks wether the threshold computed with different distributions is the same
-def check_EMWA_threshold_independence():
-    x = EWMA_QuantTree.EWMA_QuantTree\
-        (initial_pi_values, 0.01, qt.tv_statistic, 1000, 100, alpha, True, False, nu, beta)
-    runs = 20
-    normal = np.zeros(10000)
-    uniform = np.zeros(runs)
-    for counter in range(runs):
-        normal +=  x.compute_EMWA_threshold_with_a_stat('normal', nu)
-        #uniform_batch = np.random.uniform(0, 1, nu)
-        #uniform[counter] = x.compute_EMWA_threshold_with_a_stat('uniform', nu)
-    normal = normal/runs
-    plt.plot(normal)
-    plt.title('EMWA with normal')
-    plt.show()
-    return
+model = EWMA_QuantTree.EWMA_QuantTree(initial_pi_values, lambd, qt.tv_statistic, max_N, 100, alpha, False, False, nu, beta)
+data_handler = aux.Data_set_Handler(data_Dimension)
+data = data_handler.return_equal_batch(2000)
+model.initialize(data)
+stat = np.array(model.alterative_EWMA_thresholds_computation())
+for index in range(1, 10):
+    stat += np.array(model.alterative_EWMA_thresholds_computation())
+stat = stat/index
+plt.plot(stat)
+plt.title('thresholds')
+plt.show()
 
-def check_static_EMWA_threshold_independence():
-    x = EWMA_QuantTree.Static_EMWA_QuantTree(initial_pi_values, 0.01, qt.tv_statistic, 1000, 100, alpha, True, nu, beta)
-    runs = 10
-    time = 4000
-    normal = np.zeros(time)
-    #uniform = np.zeros(runs)
-    for counter in range(runs):
-        normal += x.compute_EMWA_threshold_with_a_stat('normal', time)
-        #uniform += x.compute_EMWA_threshold_with_a_stat('uniform', nu, 1000)
-    #plt.boxplot([normal, uniform], labels = ['Normal', 'uniform'])
-    normal = normal/runs
-    plt.plot(normal)
-    plt.title('EMWA static with normal')
-    plt.show()
-    print('ciao')
-    return
-
-"""
-x = dynamicQuantTree.Static_EMWA_QuantTree\
-    (initial_pi_values, 0.01, qt.tv_statistic, 1000, 100, alpha, True, nu, beta)
-for counter in range(10):
-    y = x.tell_averaggio('normal', 4000)
-    print(y, alpha)
-
-for index in range(10):
-    print ('Value is' + str(run_normally()))
-"""
-
-test_EWMA(10,1500, 0.1, qt.pearson_statistic)
-test_EWMA(10,1500, 0.1, qt.tv_statistic)
