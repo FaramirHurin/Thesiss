@@ -1,5 +1,4 @@
 import extendedQuantTree as aux
-import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,11 +36,11 @@ def compare_FP0(SKL):
     number_of_batches_per_test = 6000
 
     test_pearson = superman.Superman(percentage, SKL, initial_pi_values, data_number,
-                             alpha, bins_number, data_Dimension, nu, B, qt.pearson_statistic, max_N,
-                             data_number_for_learner)
-    test_tv = superman.Superman(percentage, SKL, initial_pi_values, data_number,
-                                     alpha, bins_number, data_Dimension, nu, B, qt.tv_statistic, max_N,
+                                     alpha, bins_number, data_Dimension, nu, B, qt.pearson_statistic, max_N,
                                      data_number_for_learner)
+    test_tv = superman.Superman(percentage, SKL, initial_pi_values, data_number,
+                                alpha, bins_number, data_Dimension, nu, B, qt.tv_statistic, max_N,
+                                data_number_for_learner)
     for index in range(number_of_tests_for_the_plot):
         test_pearson.create_training_set_for_QT()
         test_tv.create_training_set_for_QT()
