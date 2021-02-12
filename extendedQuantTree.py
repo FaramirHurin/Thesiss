@@ -64,7 +64,7 @@ class Extended_Quant_Tree(qt.QuantTree):
         super().build_histogram(data, do_PCA)
         self.ndata = len(data)
 
-    def modify_histogram(self, data):
+    def modify_histogram(self, data, definitive = True):
         self.pi_values = self.pi_values * self.ndata
         bins = self.find_bin(data)
         vect_to_add = np.zeros(len(self.pi_values))

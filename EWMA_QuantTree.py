@@ -30,7 +30,7 @@ class EWMA_QuantTree:
         self.status = 0
         self.training_set = None
 
-    def initialize(self, training_set):
+    def build_histogram(self, training_set, definitive = True):
         self.training_set = training_set
         if self.statistic ==  qt.pearson_statistic:
             debug = 0
@@ -39,9 +39,10 @@ class EWMA_QuantTree:
         else:
             raise ('Strange exception: ' + str(self.statistic))
         self.tree.build_histogram(training_set)
-        self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
-            estimate_quanttree_threshold(self.alpha, 10000)
-        self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
+        if definitive:
+            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
+                estimate_quanttree_threshold(self.alpha, 10000)
+            self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
     """
     # MC simulation, constant threshold
     def compute_EWMA_threshold(self):
@@ -51,6 +52,22 @@ class EWMA_QuantTree:
         selection = values[:int(run_lenght*self.beta)]
         return np.max(selection)
     """
+
+    def modify_histogram(self, data, definitive = False):
+        self.pi_values = self.pi_values * self.ndata
+        bins = self.find_bin(data)
+        vect_to_add = np.zeros(len(self.pi_values))
+        for index in range(len(self.pi_values)):
+            vect_to_add[index] = np.count_nonzero(bins == index)
+        self.pi_values = self.pi_values + vect_to_add
+        self.ndata = self.ndata + len(data)
+        self.pi_values = self.pi_values / self.ndata
+        if definitive:
+            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
+                estimate_quanttree_threshold(self.alpha, 10000)
+            self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
+        return
+
 
     def alterative_EWMA_thresholds_computation(self):
         x = None
