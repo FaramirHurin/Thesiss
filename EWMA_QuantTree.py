@@ -1,8 +1,5 @@
 from extendedQuantTree import Extended_Quant_Tree
-from neuralNetworks import NN_man
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import extendedQuantTree as ext
 import qtLibrary.libquanttree as qt
 
@@ -67,7 +64,6 @@ class EWMA_QuantTree:
                 estimate_quanttree_threshold(self.alpha, 10000)
             self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
         return
-
 
     def alterative_EWMA_thresholds_computation(self):
         x = None

@@ -1,54 +1,63 @@
 import EWMA_QuantTree as ewma
 import extendedQuantTree as ext
 import neuralNetworks as NN
-import qtLibrary.libquanttree as qt
 
+
+
+"""
+The interface for the class is given by the init and play_round method.
+During the first training_rounds the learner only trains its two components.
+During the following transition_rounds both learners are used to learn, while only
+the extended QuantTree is updated.
+When the definitive rounds start, both are used and none is trained
+"""
 class Paired_Learner:
 
     def __init__(self, initial_pi_values, lamb, statistic,
-                 alpha, stop, nu, desired_ARL0):
+                 alpha, nu, desired_ARL0, training_rounds, transition_rounds):
+        stop = True
         self.ewma_learner = ewma.EWMA_QuantTree(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
         self.extended_QuantTree = ext.Extended_Quant_Tree(initial_pi_values)
-        self.training_rounds = 0
-        self.transition_rounds = 0
+        self.training_rounds = training_rounds
+        self.transition_rounds = transition_rounds
         self.round = 0
-        self.extended_threshold = 0
+        self.extended_threshold = None
         self.neural_network = NN.NN_man(len(initial_pi_values), max_N=2000, min_N= 100, nodes=100)
         self.neural_network.train(alpha)
-        self.nu = 0
-        self.statistic = 0
+        self.nu = nu
+        self.statistic = statistic
         return
 
     def play_round(self, batch):
         if self.round < self.training_rounds:
             definitives = [0, 0]
-            self.play_training_round(definitives, batch)
+            change = self.play_training_round(definitives, batch)
         if self.round == self.training_rounds:
             definitives = [1, 1]
-            self.play_training_round(definitives, batch)
+            change = self.play_training_round(definitives, batch)
         elif self.round < self.transition_rounds:
             definitives = [0, 1]
-            self.play_transition_round(definitives, batch)
+            change = self.play_transition_round(definitives, batch)
         else:
             definitives = [0, 0]
-            self.play_stationary_round(definitives, batch)
-        return
+            change = self.play_stationary_round(definitives, batch)
+        return change
 
     #Train both EWMA and extended QuantTree
     def play_training_round(self, definitives, batch):
         self.update_learners([self.ewma_learner, self.extended_QuantTree], definitives, batch)
-        return
+        return False
 
     #Train Extended QuantTree, use EWMA QuantTree
     def play_transition_round(self, definitives, batch):
-        self.control([self.ewma_learner, self.extended_QuantTree], definitives, batch)
+        change = self.control([self.ewma_learner, self.extended_QuantTree], definitives, batch)
         self.update_learners([self.extended_QuantTree], batch)
-        return
+        return change
 
     #Use Extended-QuantTree in stationary fashon
     def play_stationary_round(self, definitives, batch):
-        self.control([self.extended_QuantTree], batch)
-        return
+        change = self.control([self.ewma_learner, self.extended_QuantTree], batch)
+        return change
 
     def update_learners(self, trees, definitives, batch):
         for index in len(trees):
@@ -74,7 +83,7 @@ class Paired_Learner:
                 truth += self.control_EWMA(batch)
             if tree == self.extended_QuantTree:
                 truth += self.control_extended_QuantTree(batch)
-        return
+        return truth
 
     def control_EWMA(self, batch):
         self.ewma_learner.compute_EMWA(batch)
