@@ -11,30 +11,37 @@ We want to show that:
         4) Control on both power and FPR during phase 3, when the two learner work together
 """
 
-initial_pi_values = ext.create_bins_combination()
-lamb = 0
+lamb = 0.1
+bins_number = 8
 statistic = qt.tv_statistic
-alpha = 0
-nu = 0
-desired_ARL0 = 0
-training_rounds = 0
-trainsition_rounds = 0
+alpha = [0.01]
+nu = 32
+desired_ARL0 = 100
+training_rounds = 10
+trainsition_rounds = 20
+initial_pi_values = ext.create_bins_combination(bins_number, nu)
+dimenions_number = 4
 
-def plot_ARL0_once(N):
-    learner = Paired_Learner()
-    handler = ext.Data_set_Handler()
-    for round in range(N):
-        batch = handler.return_equal_batch()
-        stopped = learner.play_round()
+def plot_ARL0_once(max_lenght, desired_ARL0):
+    learner = Paired_Learner(desired_ARL0= desired_ARL0, nu = nu, initial_pi_values = initial_pi_values, alpha=alpha,
+                             statistic=statistic, lamb=lamb, training_rounds= training_rounds, transition_rounds=trainsition_rounds)
+    handler = ext.Data_set_Handler(dimenions_number)
+    batch = handler.return_equal_batch(10 * nu)
+    stopped = learner.play_round(batch)
+    for round in range(1, max_lenght):
+        batch = handler.return_equal_batch(nu)
+        stopped = learner.play_round(batch)
         if stopped:
             break
     return round
 
-def plot_ARL0(exp_number, N):
+def plot_ARL0(exp_number, max_lenght):
     rounds = []
-    for exp in exp_number:
-        round = plot_ARL0_once(N)
+    for exp in range(exp_number):
+        round = plot_ARL0_once(max_lenght, desired_ARL0)
         rounds.append(round)
     plt.boxplot(rounds)
     plt.title('ARL0')
     plt.show()
+
+plot_ARL0(10, 1000)

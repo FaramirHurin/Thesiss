@@ -110,9 +110,9 @@ class NN_man:
             alpha = alpha[0]
         #df = pd.read_csv('File ending with N and thr')
         if alpha == 0.01:
-            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\File_N_and_thr_0_01_pearson')
+            df = pd.read_csv('..\learner_dataset\File_N_and_thr_0_01')
         elif alpha == 0.5:
-            df = pd.read_csv(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\File_N_and_thr_0_5_pearson')
+            df = pd.read_csv('..\learner_dataset\File_N_and_thr_0_5')
         else:
             raise Exception('alpha is wrong, expected 0.01 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()

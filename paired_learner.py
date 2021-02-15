@@ -29,10 +29,13 @@ class Paired_Learner:
         return
 
     def play_round(self, batch):
-        if self.round < self.training_rounds:
+        if self.round == 0:
+            self.initialize_learners(batch, [self.ewma_learner, self.extended_QuantTree])
+            change = False
+        elif self.round < self.training_rounds:
             definitives = [0, 0]
             change = self.play_training_round(definitives, batch)
-        if self.round == self.training_rounds:
+        elif self.round == self.training_rounds:
             definitives = [1, 1]
             change = self.play_training_round(definitives, batch)
         elif self.round < self.transition_rounds:
@@ -40,7 +43,8 @@ class Paired_Learner:
             change = self.play_transition_round(definitives, batch)
         else:
             definitives = [0, 0]
-            change = self.play_stationary_round(definitives, batch)
+            change = self.play_stationary_round(batch)
+        self.round +=1
         return change
 
     #Train both EWMA and extended QuantTree
@@ -50,29 +54,32 @@ class Paired_Learner:
 
     #Train Extended QuantTree, use EWMA QuantTree
     def play_transition_round(self, definitives, batch):
-        change = self.control([self.ewma_learner, self.extended_QuantTree], definitives, batch)
-        self.update_learners([self.extended_QuantTree], batch)
+        change = self.control([self.ewma_learner, self.extended_QuantTree], batch)
+        self.update_learners([self.extended_QuantTree], definitives, batch)
         return change
 
     #Use Extended-QuantTree in stationary fashon
-    def play_stationary_round(self, definitives, batch):
+    def play_stationary_round(self, batch):
         change = self.control([self.ewma_learner, self.extended_QuantTree], batch)
         return change
 
+    def initialize_learners(self, batch, trees):
+        self.ewma_learner.build_histogram(batch, False)
+        self.extended_QuantTree.build_histogram(batch)
+        return
+
     def update_learners(self, trees, definitives, batch):
-        for index in len(trees):
+        for index in range(len(trees)):
             tree = trees[index]
             definitive = definitives[index]
-            if self.round == 0:
-                tree.build_histogram(batch, definitive)
-            else:
-                tree.modify_histogram(batch, definitive)
+            tree.modify_histogram(batch, definitive)
         if definitives[1]:
             self.update_extended_threshold()
+
         return
 
     def update_extended_threshold(self):
-        self.neural_network.predict_value\
+        self.extended_threshold = self.neural_network.predict_value\
             (self.extended_QuantTree.pi_values, self.extended_QuantTree.ndata)
         return
 
@@ -82,7 +89,7 @@ class Paired_Learner:
             if tree == self.ewma_learner:
                 truth += self.control_EWMA(batch)
             if tree == self.extended_QuantTree:
-                truth += self.control_extended_QuantTree(batch)
+                truth += self.control_Extended_QuantTree(batch)
         return truth
 
     def control_EWMA(self, batch):

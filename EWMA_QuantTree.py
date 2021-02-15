@@ -51,14 +51,15 @@ class EWMA_QuantTree:
     """
 
     def modify_histogram(self, data, definitive = False):
-        self.pi_values = self.pi_values * self.ndata
-        bins = self.find_bin(data)
-        vect_to_add = np.zeros(len(self.pi_values))
-        for index in range(len(self.pi_values)):
+        tree = self.tree
+        tree.pi_values = tree.pi_values * tree.ndata
+        bins = tree.find_bin(data)
+        vect_to_add = np.zeros(len(tree.pi_values))
+        for index in range(len(tree.pi_values)):
             vect_to_add[index] = np.count_nonzero(bins == index)
-        self.pi_values = self.pi_values + vect_to_add
-        self.ndata = self.ndata + len(data)
-        self.pi_values = self.pi_values / self.ndata
+        tree.pi_values = tree.pi_values + vect_to_add
+        self.tree.ndata = tree.ndata + len(data)
+        self.tree.pi_values = tree.pi_values / tree.ndata
         if definitive:
             self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
                 estimate_quanttree_threshold(self.alpha, 10000)
@@ -67,8 +68,8 @@ class EWMA_QuantTree:
 
     def alterative_EWMA_thresholds_computation(self):
         x = None
-        max_lenght = 3 * self.desired_ARL0
-        experiments = max_lenght * 30
+        max_lenght =  self.desired_ARL0 # * 3
+        experiments = max_lenght * 20
         table = self.fill_table(experiments, max_lenght)
         """means = np.zeros(table.shape[1])
         for index in range(len(means)):
@@ -161,6 +162,10 @@ class EWMA_QuantTree:
     def find_change(self):
         # If there is a change we return True
         index = min(len(self.EWMA_thresholds) - 1, self.status)
-        change = self.value > self.EWMA_thresholds[index]
+        try:
+            change = self.value > self.EWMA_thresholds[index]
+        except:
+            print(len(self.EWMA_thresholds), index)
+            raise Exception
         return change
 
