@@ -18,13 +18,13 @@ alpha = [0.01]
 nu = 32
 desired_ARL0 = 100
 training_rounds = 10
-trainsition_rounds = 20
-initial_pi_values = ext.create_bins_combination(bins_number, nu)
+transition_rounds = 20
+initial_pi_values = ext.create_bins_combination(bins_number)
 dimenions_number = 4
 
 def plot_ARL0_once(max_lenght, desired_ARL0):
     learner = Paired_Learner(desired_ARL0= desired_ARL0, nu = nu, initial_pi_values = initial_pi_values, alpha=alpha,
-                             statistic=statistic, lamb=lamb, training_rounds= training_rounds, transition_rounds=trainsition_rounds)
+                             statistic=statistic, lamb=lamb, training_rounds= training_rounds, transition_rounds=transition_rounds)
     handler = ext.Data_set_Handler(dimenions_number)
     batch = handler.return_equal_batch(10 * nu)
     stopped = learner.play_round(batch)

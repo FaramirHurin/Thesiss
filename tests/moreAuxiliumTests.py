@@ -45,7 +45,7 @@ def plot_cumulative_functions(N1, N2, B, pi_values, nu, statistic):
     def_values1 = np.zeros(B)
     def_values2 = np.zeros(B)
     for indice in range(to_average):
-        pi_values = aux.create_bins_combination(bins_number, min_N)
+        pi_values = aux.create_bins_combination(bins_number)
         statistics1 = []
         statistics2 = []
         data_set1 = np.random.uniform(0, 1, N1)
@@ -123,7 +123,7 @@ def check_alternative_computaton():
 def plot_normal_computation():
     normals = []
     for index in range(5):
-        bins = aux.create_bins_combination(bins_number, 20)
+        bins = aux.create_bins_combination(bins_number)
         tree = qt.QuantTree(bins)
         tree.ndata = 20000
         test = qt.ChangeDetectionTest(tree, nu, statistic)

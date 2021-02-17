@@ -82,9 +82,9 @@ def plot_EWMA_thresholds(initial_data_set, experiments):
     data_handler = aux.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(initial_data_set)
     model.build_histogram(data)
-    stat = np.array(model.alterative_EWMA_thresholds_computation())
+    stat = np.array(model.alternative_EWMA_thresholds_computation())
     for index in range(1, experiments):
-        stat += np.array(model.alterative_EWMA_thresholds_computation())
+        stat += np.array(model.alternative_EWMA_thresholds_computation())
     stat = stat / index
     plt.plot(stat)
     plt.title('thresholds')

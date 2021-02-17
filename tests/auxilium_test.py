@@ -2,10 +2,8 @@ import extendedQuantTree as aux
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-
-#HYPERPARAMETERS
 import neuralNetworks
-import superman
+import Old_files.superman as superman
 
 percentage = 0.9
 bins_number = 32

@@ -90,15 +90,13 @@ class Data_set_Handler:
         gauss1 = ccm.rotate_and_shift_gaussian(self.gauss0, rot, shift)
         return np.random.multivariate_normal(gauss1[0], gauss1[1], B)
 
-def create_bins_combination(bins_number, minN):
+def create_bins_combination(bins_number):
     gauss = ccm.random_gaussian(bins_number)
     histogram = np.random.multivariate_normal(gauss[0], gauss[1], 1)
     histogram = histogram[0]
     histogram = np.abs(histogram)
     summa = np.sum(histogram)
     histogram = histogram / summa
-    if minN == 0:
-        return histogram
     histogram = np.sort(histogram)
     return histogram
 
