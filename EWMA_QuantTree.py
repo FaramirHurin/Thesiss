@@ -8,7 +8,7 @@ import qtLibrary.libquanttree as qt
 class EWMA_QuantTree:
 
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
-        pi_values = ext.create_bins_combination(len(initial_pi_values), 3 * len(initial_pi_values))
+        pi_values = ext.create_bins_combination(len(initial_pi_values))
         self.pi_values = pi_values
         self.tree = Extended_Quant_Tree(pi_values)
         self.lamb = lamb
@@ -39,18 +39,15 @@ class EWMA_QuantTree:
         if definitive:
             self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
                 estimate_quanttree_threshold(self.alpha, 10000)
-            self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
-    """
-    # MC simulation, constant threshold
-    def compute_EWMA_threshold(self):
-        run_lenght = 1000000
-        tree, threshold, ewma_0 = self.prepare_simulated_run()
-        values = self.simulate_EWMA_run(run_lenght, tree, ewma_0)
-        selection = values[:int(run_lenght*self.beta)]
-        return np.max(selection)
-    """
+            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
 
     def modify_histogram(self, data, definitive = False):
+        '''
+         It modifies the probabilities associated to each bin according to the EXT
+         tree procedure.
+         Currently updating the threshold only at the last round (using MC), need to
+         create an online version that uses the NN at each round
+         '''
         tree = self.tree
         tree.pi_values = tree.pi_values * tree.ndata
         bins = tree.find_bin(data)
@@ -63,12 +60,19 @@ class EWMA_QuantTree:
         if definitive:
             self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
                 estimate_quanttree_threshold(self.alpha, 10000)
-            self.EWMA_thresholds = self.alterative_EWMA_thresholds_computation()
+            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
         return
 
-    def alterative_EWMA_thresholds_computation(self):
+    def alternative_EWMA_thresholds_computation(self):
+        '''
+        It computes the thresholds for the EWMA for max_lenght rounds.
+        Multiple runs are stored.
+        From the first column the highest alpha*N values are selected and the
+        threshold is computed. The selected rows are then eliminated.
+        :return:
+        '''
         x = None
-        max_lenght =  self.desired_ARL0 # * 3
+        max_lenght =  self.desired_ARL0 * 3
         experiments = max_lenght * 20
         table = self.fill_table(experiments, max_lenght)
         """means = np.zeros(table.shape[1])
@@ -89,13 +93,9 @@ class EWMA_QuantTree:
         #First call
         if thresholds is None:
             thresholds = []
-
         values = table[:, 0]
         vals = np.sort(values)
         threshold = vals[int(len(vals) * (1 - self.beta))]
-
-        assert threshold > np.mean(vals) - 0.0001 #Costante necessaria per gli arrotondamenti
-
         thresholds.append(threshold)
         to_eliminate = []
         for index in range(table.shape[0]):
@@ -169,3 +169,14 @@ class EWMA_QuantTree:
             raise Exception
         return change
 
+
+
+    """
+    # MC simulation, constant threshold
+    def compute_EWMA_threshold(self):
+        run_lenght = 1000000
+        tree, threshold, ewma_0 = self.prepare_simulated_run()
+        values = self.simulate_EWMA_run(run_lenght, tree, ewma_0)
+        selection = values[:int(run_lenght*self.beta)]
+        return np.max(selection)
+    """
