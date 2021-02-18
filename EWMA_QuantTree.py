@@ -1,4 +1,4 @@
-from extendedQuantTree import Extended_Quant_Tree
+from extendedQuantTree import Incremental_Quant_Tree
 import numpy as np
 import extendedQuantTree as ext
 import qtLibrary.libquanttree as qt
@@ -9,7 +9,7 @@ class EWMA_QUantTree:
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
         pi_values = ext.create_bins_combination(len(initial_pi_values))
         self.pi_values = pi_values
-        self.tree = Extended_Quant_Tree(pi_values)
+        self.tree = Incremental_Quant_Tree(pi_values)
         self.lamb = lamb
         self.nu = nu
         self.statistic = statistic
@@ -181,6 +181,7 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
         super().__init__(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
         self.neural_network = NN.NN_man()
         self.neural_network.train(self.alpha)
+        self.buffer = None
 
     def build_histogram(self, training_set):
         super().build_histogram(training_set)
@@ -190,3 +191,12 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
     def modify_histogram(self, data):
         super().modify_histogram(data)
         self.threshold = self.neural_network.predict_value(self.tree.pi_values, self.tree.ndata)
+
+    def play_round(self, batch):
+        self.compute_EMWA(batch)
+        change = self.find_change()
+        if not change:
+            if self.buffer:
+                self.modify_histogram(self.buffer)
+            self.buffer = batch
+        return change

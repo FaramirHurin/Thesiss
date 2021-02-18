@@ -202,12 +202,11 @@ def store_datestets():
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.01], 5000)
     n.store_asymptotic_dataSet(int(data_number_for_learner), nu, statistic, [0.5], 5000)
 
-
 def single_alternative_FP0_comparison(batches, statistic):
     values = np.zeros(batches)
     pi_values = aux.create_bins_combination\
         (len(initial_pi_values), 2 * len(initial_pi_values))
-    tree = aux.Extended_Quant_Tree(initial_pi_values)
+    tree = aux.Incremental_Quant_Tree(initial_pi_values)
     data_generator = aux.Data_set_Handler(data_number)
     training_set = data_generator.return_equal_batch(1000)
     tree.build_histogram(training_set)
@@ -216,7 +215,6 @@ def single_alternative_FP0_comparison(batches, statistic):
         batch = data_generator.return_equal_batch(nu)
         values[index] = statistic(tree, batch) > threshold
     return values
-
 
 def alternative_FP0_comparison(batches, points_to_plot):
     box_pearson = np.zeros(points_to_plot)
@@ -235,4 +233,6 @@ def alternative_FP0_comparison(batches, points_to_plot):
     plt.title('False Positive Rate: random pi_values - 8 bins')
     plt.show()
 
-compare_FP0(1)
+compare_regressor_FP0(1)
+compare_regressor_power(1)
+compare_regressor_power(5)

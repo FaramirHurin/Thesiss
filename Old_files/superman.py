@@ -1,5 +1,5 @@
 import qtLibrary.libquanttree as qt
-from extendedQuantTree import Data_set_Handler, Extended_Quant_Tree, Alternative_threshold_computation
+from extendedQuantTree import Data_set_Handler, Incremental_Quant_Tree, Alternative_threshold_computation
 from neuralNetworks import NN_man
 import numpy as np
 
@@ -66,7 +66,7 @@ class Superman:
         initial_db_size = int(len(self.data_set)*self.percentage)
         initial_data = self.data_set[0:initial_db_size]
         sequent_data = self.data_set[initial_db_size:len(self.data_set)]
-        tree = Extended_Quant_Tree(self.initial_pi_values)
+        tree = Incremental_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
         test = qt.ChangeDetectionTest(tree, self.nu, self.statistic)
@@ -94,7 +94,7 @@ class Superman:
         initial_db_size = int(len(self.data_set) * self.percentage)
         initial_data = self.data_set[0:initial_db_size]
         sequent_data = self.data_set[initial_db_size:len(self.data_set)]
-        tree = Extended_Quant_Tree(self.initial_pi_values)
+        tree = Incremental_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
         test = Alternative_threshold_computation(tree.pi_values, self.nu, self.statistic)
@@ -116,7 +116,7 @@ class Superman:
         initial_db_size = int(len(self.data_set) * self.percentage)
         initial_data = self.data_set[0:initial_db_size]
         sequent_data = self.data_set[initial_db_size:len(self.data_set)]
-        tree = Extended_Quant_Tree(self.initial_pi_values)
+        tree = Incremental_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
         man = NN_man(self.bins_number, self.max_N, 30, 10)
@@ -139,7 +139,7 @@ class Superman:
         initial_db_size = int(len(self.data_set) * self.percentage)
         initial_data = self.data_set[0:initial_db_size]
         sequent_data = self.data_set[initial_db_size:len(self.data_set)]
-        tree = Extended_Quant_Tree(self.initial_pi_values)
+        tree = Incremental_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
         man = NN_man(50, self.max_N, 30, 200)

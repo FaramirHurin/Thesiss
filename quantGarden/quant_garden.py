@@ -15,7 +15,7 @@ class Quant_garden:
     def __init__(self, K, statistic, nu, alpha, beta, bins_number, min_N, max_N, uses_double_check, inner_alpha):
         nodes = 200
         self.K = K
-        self.garden =  np.empty(K, dtype = aux.Extended_Quant_Tree) #The trees
+        self.garden =  np.empty(K, dtype = aux.Incremental_Quant_Tree) #The trees
         self.batch_on_trial = None
         self.table = np.zeros([K, K])
         self.statistic = statistic
@@ -84,7 +84,7 @@ class Quant_garden:
         return stat > threshold
 
     def restart(self):
-        self.garden =  np.empty(self.K, dtype = aux.Extended_Quant_Tree)
+        self.garden =  np.empty(self.K, dtype = aux.Incremental_Quant_Tree)
         self.table = np.zeros([self.K, self.K])
         self.status = 0
         self.batch_on_trial = None
@@ -118,7 +118,7 @@ class Quant_garden:
 
     def first_rounds(self, batch):
         if self.status == 0: #First round
-            tree = aux.Extended_Quant_Tree(initial_pi_values)
+            tree = aux.Incremental_Quant_Tree(initial_pi_values)
             tree.build_histogram(batch)
             self.garden[-1] = tree
         else: #Not first, but before K

@@ -1,6 +1,7 @@
 import numpy as np
 import qtLibrary.libquanttree as qt
 import qtLibrary.libccm as ccm
+import neuralNetworks as nn
 
 # Uses cuts on space instead of the ones on probabilites, equal to normal cut with N=Inf
 class Alternative_threshold_computation:
@@ -54,7 +55,7 @@ class Alternative_threshold_computation:
         return threshold
 
 # Extends canonic quantTree with the possibility to modify the histogram associated
-class Extended_Quant_Tree(qt.QuantTree):
+class Incremental_Quant_Tree(qt.QuantTree):
 
     def __init__(self, pi_values):
         super().__init__(pi_values)
@@ -100,3 +101,25 @@ def create_bins_combination(bins_number):
     histogram = np.sort(histogram)
     return histogram
 
+class Online_Incremental_QuantTree:
+
+    def init(self, pi_values, alpha, statistic):
+        self.tree = Incremental_Quant_Tree(pi_values)
+        self.network = nn.NN_man()
+        self.network.train(alpha)
+        self.buffer = None
+        ìthreshold = None
+        self.statistic = statistic
+        return
+
+    def build_histogram(self, data):
+        self.tree.build_histogram(data)
+
+    def play_round(self, batch):
+        threshold = self.network.predict_value(self.tree.pi_values, self.tree.leaves)
+        change = self.statistic(self.tree, batch) > threshold
+        if not change:
+            if self.buffer:
+                self.tree.modify_histogram(self.buffer)
+            self.buffer = batch
+        return change
