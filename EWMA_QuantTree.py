@@ -2,11 +2,10 @@ from extendedQuantTree import Extended_Quant_Tree
 import numpy as np
 import extendedQuantTree as ext
 import qtLibrary.libquanttree as qt
+import neuralNetworks as NN
 
 
-
-class EWMA_QuantTree:
-
+class EWMA_QUantTree:
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
         pi_values = ext.create_bins_combination(len(initial_pi_values))
         self.pi_values = pi_values
@@ -17,31 +16,27 @@ class EWMA_QuantTree:
         self.record_history = []
         self.alpha = alpha
         self.value = self.alpha[0]
-        self.beta = 1/desired_ARL0  # 1/ARL0
+        self.beta = 1 / desired_ARL0  # 1/ARL0
         self.desired_ARL0 = desired_ARL0
         self.threshold = 0
         self.max_len_computed = 0
-        #self.EWMA_threshold = 0
+        # self.EWMA_threshold = 0
         self.EWMA_thresholds = []
         self.stop = stop
         self.status = 0
         self.training_set = None
 
-    def build_histogram(self, training_set, definitive = True):
+    def build_histogram(self, training_set):
         self.training_set = training_set
-        if self.statistic ==  qt.pearson_statistic:
+        if self.statistic == qt.pearson_statistic:
             debug = 0
         elif self.statistic == qt.tv_statistic:
             debug = 1
         else:
             raise ('Strange exception: ' + str(self.statistic))
         self.tree.build_histogram(training_set)
-        if definitive:
-            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
-                estimate_quanttree_threshold(self.alpha, 10000)
-            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
 
-    def modify_histogram(self, data, definitive = False):
+    def modify_histogram(self, data):
         '''
          It modifies the probabilities associated to each bin according to the EXT
          tree procedure.
@@ -57,11 +52,6 @@ class EWMA_QuantTree:
         tree.pi_values = tree.pi_values + vect_to_add
         self.tree.ndata = tree.ndata + len(data)
         self.tree.pi_values = tree.pi_values / tree.ndata
-        if definitive:
-            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
-                estimate_quanttree_threshold(self.alpha, 10000)
-            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
-        return
 
     def alternative_EWMA_thresholds_computation(self):
         '''
@@ -169,14 +159,34 @@ class EWMA_QuantTree:
             raise Exception
         return change
 
+class Offline_EWMA_QuantTree(EWMA_QUantTree):
 
+    def build_histogram(self, training_set, definitive = True):
+        super().build_histogram(training_set)
+        if definitive:
+            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
+                estimate_quanttree_threshold(self.alpha, 10000)
+            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
 
-    """
-    # MC simulation, constant threshold
-    def compute_EWMA_threshold(self):
-        run_lenght = 1000000
-        tree, threshold, ewma_0 = self.prepare_simulated_run()
-        values = self.simulate_EWMA_run(run_lenght, tree, ewma_0)
-        selection = values[:int(run_lenght*self.beta)]
-        return np.max(selection)
-    """
+    def modify_histogram(self, data, definitive = False):
+        super().modify_histogram(data, definitive)
+        if definitive:
+            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
+                estimate_quanttree_threshold(self.alpha, 10000)
+            self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
+        return
+
+class Online_EWMA_QUantTree(EWMA_QUantTree):
+    def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
+        super().__init__(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
+        self.neural_network = NN.NN_man()
+        self.neural_network.train(self.alpha)
+
+    def build_histogram(self, training_set):
+        super().build_histogram(training_set)
+        self.threshold = self.neural_network.predict_value(self.tree.pi_values, self.tree.ndata)
+        self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
+
+    def modify_histogram(self, data):
+        super().modify_histogram(data)
+        self.threshold = self.neural_network.predict_value(self.tree.pi_values, self.tree.ndata)

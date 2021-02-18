@@ -16,7 +16,7 @@ class Paired_Learner:
     def __init__(self, initial_pi_values, lamb, statistic,
                  alpha, nu, desired_ARL0, training_rounds, transition_rounds):
         stop = True
-        self.ewma_learner = ewma.EWMA_QuantTree(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
+        self.ewma_learner = ewma.Offline_EWMA_QuantTree(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
         self.extended_QuantTree = ext.Extended_Quant_Tree(initial_pi_values)
         self.training_rounds = training_rounds
         self.transition_rounds = transition_rounds
