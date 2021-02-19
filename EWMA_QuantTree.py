@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 from extendedQuantTree import Incremental_Quant_Tree
 import numpy as np
 import extendedQuantTree as ext
@@ -7,7 +8,7 @@ import neuralNetworks as NN
 
 class EWMA_QUantTree:
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
-        pi_values = ext.create_bins_combination(len(initial_pi_values))
+        pi_values = auxiliary_project_functions.create_bins_combination(len(initial_pi_values))
         self.pi_values = pi_values
         self.tree = Incremental_Quant_Tree(pi_values)
         self.lamb = lamb
@@ -179,7 +180,8 @@ class Offline_EWMA_QuantTree(EWMA_QUantTree):
 class Online_EWMA_QUantTree(EWMA_QUantTree):
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
         super().__init__(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
-        self.neural_network = NN.NN_man()
+        bins_number = len(initial_pi_values)
+        self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 200)
         self.neural_network.train(self.alpha)
         self.buffer = None
 

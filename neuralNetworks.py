@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn import neural_network as nn
 import qtLibrary.libquanttree as qt
-from extendedQuantTree import create_bins_combination, Alternative_threshold_computation
+from auxiliary_project_functions import create_bins_combination, Alternative_threshold_computation
+
 
 class DataSet_for_the_learner:
 

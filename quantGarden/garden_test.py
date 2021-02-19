@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ gard.initial_pi_values = np.ones(bins_number)/bins_number
 
 #Checks FPR of the paired learner is what we want it to be
 def plot_hidden_alpha():
-    handler = aux.Data_set_Handler(dimension_number)
+    handler = auxiliary_project_functions.Data_set_Handler(dimension_number)
     false_positive = 0
     stop_time = 0
     check_garden = True
@@ -50,7 +51,7 @@ def plot_hidden_alpha():
 
 #How long lasts a run of a standard QT?
 def test_qt_ARLO0():
-    handler = aux.Data_set_Handler(dimension_number)
+    handler = auxiliary_project_functions.Data_set_Handler(dimension_number)
     false_positive = 0
     stop_time = 0
     tree = qt.QuantTree(initial_pi_values)
@@ -71,7 +72,7 @@ def test_qt_ARLO0():
 #How long lasts a run of the consontuously modifying QT?
 # checkGarden controls wether we want to use the paired learner
 def test_ARL0(check_garden):
-    handler = aux.Data_set_Handler(dimension_number)
+    handler = auxiliary_project_functions.Data_set_Handler(dimension_number)
     false_positive = 0
     stop_time = 0
     garden = gard.Quant_garden(K,statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden, inner_alpha)
@@ -110,7 +111,7 @@ def plot_ARL0(points_to_plot, check_garden):
 #Tests on ARL1
 
 def test_QT_ARL1(change_time, SKL):
-    handler = aux.Data_set_Handler(dimension_number)
+    handler = auxiliary_project_functions.Data_set_Handler(dimension_number)
     positive = 0
     time = 0
     tree = qt.QuantTree(initial_pi_values)
@@ -138,7 +139,7 @@ def test_QT_ARL1(change_time, SKL):
         return 100
 
 def test_ARL1(change_time, SKL,check_garden):
-    handler = aux.Data_set_Handler(dimension_number)
+    handler = auxiliary_project_functions.Data_set_Handler(dimension_number)
     positive = 0
     time = 0
     garden = gard.Quant_garden(K, statistic, nu, alpha, beta, bins_number, min_N, max_N, check_garden, inner_alpha)

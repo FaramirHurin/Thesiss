@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 import extendedQuantTree as aux
 import qtLibrary.libquanttree as qt
 import numpy as np
@@ -6,13 +7,13 @@ import neuralNetworks
 import Old_files.superman as superman
 
 percentage = 0.9
-bins_number = 32
+bins_number = 8
 initial_pi_values = np.ones(bins_number)/bins_number
 data_number = 500
 alpha = [0.5]
 beta = 0.1
 data_Dimension = 3
-nu = 32
+nu = 16
 B = 4000
 statistic = qt.tv_statistic
 X = [3]
@@ -173,10 +174,10 @@ def compare_regressor_FP0(SKL):
 
 #Compare power between QT and Extended QT without NN
 def compare_regressor_power(SKL):
-    number_of_tests_for_the_plot = 10
+    number_of_tests_for_the_plot = 4
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 1000
+    number_of_batches_per_test = 100
 
     test = superman.Superman(percentage, SKL, initial_pi_values, data_number,
                              alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
@@ -189,10 +190,13 @@ def compare_regressor_power(SKL):
         normal_to_plot.append(normal_value)
         modified_to_plot.append(float(modified_value))
 
+    return normal_to_plot, modified_to_plot
+    """
     print ('Power')
     plt.boxplot([normal_to_plot, modified_to_plot], labels=['normal', 'regressed'])
     plt.title('Regressor: power')
     plt.show()
+    """
 
 def store_datestets():
     nodes = 3
@@ -204,10 +208,10 @@ def store_datestets():
 
 def single_alternative_FP0_comparison(batches, statistic):
     values = np.zeros(batches)
-    pi_values = aux.create_bins_combination\
+    pi_values = auxiliary_project_functions.create_bins_combination \
         (len(initial_pi_values), 2 * len(initial_pi_values))
     tree = aux.Incremental_Quant_Tree(initial_pi_values)
-    data_generator = aux.Data_set_Handler(data_number)
+    data_generator = auxiliary_project_functions.Data_set_Handler(data_number)
     training_set = data_generator.return_equal_batch(1000)
     tree.build_histogram(training_set)
     threshold = qt.ChangeDetectionTest(tree, nu, statistic).estimate_quanttree_threshold(alpha, B)
@@ -233,6 +237,17 @@ def alternative_FP0_comparison(batches, points_to_plot):
     plt.title('False Positive Rate: random pi_values - 8 bins')
     plt.show()
 
-compare_regressor_FP0(1)
-compare_regressor_power(1)
-compare_regressor_power(5)
+#compare_regressor_FP0(1)
+normals = []
+modified = []
+for index in range(1, 2):
+    norm, mod = compare_regressor_power(index)
+    normals.append(np.mean(norm))
+    modified.append(np.mean(mod))
+plt.plot(norm)
+plt.legend('Normal')
+plt.plot(mod)
+plt.legend('Modified')
+plt.show()
+plt.title('Power normal and modified')
+plt.show()

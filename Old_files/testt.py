@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 import extendedQuantTree as aux
 import thesis_tests.auxilium_test as aux_test
 import qtLibrary.libquanttree as qt
@@ -29,8 +30,8 @@ def test_asymptotic_coherence():
     means = []
     variances = []
     for counter in range(10):
-        bins = aux.create_bins_combination(aux_test.bins_number, 100)
-        alt = aux.Alternative_threshold_computation(bins, nu, statistic)
+        bins = auxiliary_project_functions.create_bins_combination(aux_test.bins_number, 100)
+        alt = auxiliary_project_functions.Alternative_threshold_computation(bins, nu, statistic)
         thresholds = []
         for inner_counter in range(10):
             threshold = alt.compute_threshold(alpha, B)
@@ -45,7 +46,7 @@ def test_standard_coherence(min_N, max_N):
     variances = []
     for count in range(10):
         N = np.random.randint(min_N, max_N)
-        tree = qt.QuantTreeUnivariate(aux.create_bins_combination(bins_number, min_N))
+        tree = qt.QuantTreeUnivariate(auxiliary_project_functions.create_bins_combination(bins_number, min_N))
         tree.ndata = N
         thresholds = []
         for innercount in range(10):
@@ -85,7 +86,7 @@ def observe_growing_asymptpotic_B(bins, B_values, N, experiments_number):
     means = []
     for B_value in B_values:
         tree = qt.QuantTreeUnivariate(bins)
-        alt = aux.Alternative_threshold_computation(bins, nu, statistic)
+        alt = auxiliary_project_functions.Alternative_threshold_computation(bins, nu, statistic)
         thresholds = []
         for counter in range(experiments_number):
             thresholds.append(alt.compute_threshold(alpha,B_value))
@@ -105,7 +106,7 @@ def try_asymptotic_correctness():
     for count in range(len(thresholds)):
         threshold = thresholds[count]
         if threshold > np.quantile(thresholds, 0.99):
-            alt = aux.Alternative_threshold_computation(histograms[count], nu, statistic)
+            alt = auxiliary_project_functions.Alternative_threshold_computation(histograms[count], nu, statistic)
             thr = alt.compute_threshold(alpha, 3000)
             print ('Normal value and predicted value')
             print(threshold, thr)
@@ -142,7 +143,7 @@ def try_normal_correctness():
     for count in range(len(thresholds)):
         threshold = thresholds[count]
         if threshold > np.quantile(thresholds, 0.99):
-            alt = aux.Alternative_threshold_computation(histograms[count], nu, statistic)
+            alt = auxiliary_project_functions.Alternative_threshold_computation(histograms[count], nu, statistic)
             thr = alt.compute_threshold(alpha, 1000)
             print ('Normal value and predicted value')
             print(threshold, thr)
@@ -173,8 +174,8 @@ def test_asymptotic_training(number_of_experiments):
     thresholds = []
     predictions = []
     for counter in range(number_of_experiments):
-        histogram = aux.create_bins_combination(bins_number, 20)
-        thresholds.append(aux.Alternative_threshold_computation(histogram, nu, statistic).compute_threshold(alpha, B))
+        histogram = auxiliary_project_functions.create_bins_combination(bins_number, 20)
+        thresholds.append(auxiliary_project_functions.Alternative_threshold_computation(histogram, nu, statistic).compute_threshold(alpha, B))
         predictions.append(float(man.predict_value(histogram, 2000)))
     print ('R2 is')
     print(r2_score(thresholds, predictions))
@@ -189,7 +190,7 @@ def test_normal_training(number_of_experiments, minN, maxN):
     thresholds = []
     predictions = []
     for counter in range(number_of_experiments):
-        histogram = aux.create_bins_combination(bins_number, 20)
+        histogram = auxiliary_project_functions.create_bins_combination(bins_number, 20)
         N = np.random.randint(minN, maxN)
         tree = qt.QuantTreeUnivariate(histogram)
         tree.ndata = N

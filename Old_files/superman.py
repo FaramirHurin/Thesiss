@@ -1,5 +1,6 @@
 import qtLibrary.libquanttree as qt
-from extendedQuantTree import Data_set_Handler, Incremental_Quant_Tree, Alternative_threshold_computation
+from extendedQuantTree import Incremental_Quant_Tree
+from auxiliary_project_functions import Alternative_threshold_computation, Data_set_Handler
 from neuralNetworks import NN_man
 import numpy as np
 

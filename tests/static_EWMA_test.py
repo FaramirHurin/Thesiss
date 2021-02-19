@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 import extendedQuantTree as aux
 import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
@@ -19,7 +20,7 @@ SKL = 1
 #Dynamic QuantTree tests
 
 def run_normally(run_lenght, desired_ARL0, statistic):
-    data_handler = aux.Data_set_Handler(data_Dimension)
+    data_handler = auxiliary_project_functions.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
     x = EWMA_QuantTree.Offline_EWMA_QuantTree(initial_pi_values, lambd, statistic, alpha, False, nu, desired_ARL0)
@@ -31,7 +32,7 @@ def run_normally(run_lenght, desired_ARL0, statistic):
 
 #Plots the EWMA value of one run.
 def test_EWMA_once(run_lenght, desired_ARL0, statistic):
-    data_handler = aux.Data_set_Handler(data_Dimension)
+    data_handler = auxiliary_project_functions.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
     x = EWMA_QuantTree.Offline_EWMA_QuantTree(initial_pi_values, lambd, statistic, alpha, False, nu, desired_ARL0)
@@ -64,7 +65,7 @@ def test_EWMA(experiments_number, run_lenght, desired_ARL0, statistic):
     plt.title('stat values: r = pearson, b = TV')
 
 def test_ARLO_once(run_lenght, statistic):
-    data_handler = aux.Data_set_Handler(data_Dimension)
+    data_handler = auxiliary_project_functions.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(4000)
     statistics = np.zeros(run_lenght)
     x = EWMA_QuantTree.Offline_EWMA_QuantTree\
@@ -79,7 +80,7 @@ def test_ARLO_once(run_lenght, statistic):
 
 def plot_EWMA_thresholds(initial_data_set, experiments):
     model = EWMA_QuantTree.Offline_EWMA_QuantTree(initial_pi_values, lambd, qt.tv_statistic, alpha, False, nu, desired_ARL0)
-    data_handler = aux.Data_set_Handler(data_Dimension)
+    data_handler = auxiliary_project_functions.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(initial_data_set)
     model.build_histogram(data)
     stat = np.array(model.alternative_EWMA_thresholds_computation())

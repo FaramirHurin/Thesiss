@@ -1,3 +1,4 @@
+import auxiliary_project_functions
 import extendedQuantTree as aux
 import qtLibrary.libquanttree as qt
 import numpy as np
@@ -20,9 +21,9 @@ min_N = nu
 SKL = 1
 
 def test_cuts():
-    pi_values = aux.create_bins_combination(bins_number)
+    pi_values = auxiliary_project_functions.create_bins_combination(bins_number)
     pi_values = np.sort(pi_values)
-    computation = aux.Alternative_threshold_computation(pi_values, nu, statistic)
+    computation = auxiliary_project_functions.Alternative_threshold_computation(pi_values, nu, statistic)
     tree = qt.QuantTreeUnivariate(pi_values)
     data = np.random.uniform(0, 1, 100000)
     tree.build_histogram(data)
@@ -45,7 +46,7 @@ def plot_cumulative_functions(N1, N2, B, pi_values, nu, statistic):
     def_values1 = np.zeros(B)
     def_values2 = np.zeros(B)
     for indice in range(to_average):
-        pi_values = aux.create_bins_combination(bins_number)
+        pi_values = auxiliary_project_functions.create_bins_combination(bins_number)
         statistics1 = []
         statistics2 = []
         data_set1 = np.random.uniform(0, 1, N1)
@@ -62,7 +63,7 @@ def plot_cumulative_functions(N1, N2, B, pi_values, nu, statistic):
                 batch = np.random.uniform(0, 1, nu)
                 statistics2.append(statistic(tree2, batch))
         else:
-            alternative_computation = aux.Alternative_threshold_computation(pi_values, nu, statistic)
+            alternative_computation = auxiliary_project_functions.Alternative_threshold_computation(pi_values, nu, statistic)
             tree2 = alternative_computation.compute_cut()
             for counter in range(B):
                 batch = np.random.uniform(0, 1, nu)
@@ -93,7 +94,7 @@ def test_thresholds_association():
     helper.create_multiple_bins_combinations()
     helper.asymptotically_associate_thresholds(nu, statistic, alpha, B)
     for index in range(len(helper.asymptotyical_thresholds)):
-        asy = aux.Alternative_threshold_computation(helper.histograms[index], nu, statistic)
+        asy = auxiliary_project_functions.Alternative_threshold_computation(helper.histograms[index], nu, statistic)
     helper.associate_thresholds(200, nu, statistic, alpha, B)
     helper.associate_thresholds(50, nu, statistic, alpha, B)
     print(helper.thresholds)
@@ -102,8 +103,8 @@ def check_alternative_computaton():
     values2 = []
     alternatives = []
     for index in range(20):
-        bins = aux.create_bins_combination(bins_number)
-        alt1 = aux.Alternative_threshold_computation(bins, nu, statistic)
+        bins = auxiliary_project_functions.create_bins_combination(bins_number)
+        alt1 = auxiliary_project_functions.Alternative_threshold_computation(bins, nu, statistic)
         alt = alt1.compute_threshold(alpha, B)
         alternatives.append(alt)
         tree = qt.QuantTree(bins)
@@ -123,7 +124,7 @@ def check_alternative_computaton():
 def plot_normal_computation():
     normals = []
     for index in range(5):
-        bins = aux.create_bins_combination(bins_number)
+        bins = auxiliary_project_functions.create_bins_combination(bins_number)
         tree = qt.QuantTree(bins)
         tree.ndata = 20000
         test = qt.ChangeDetectionTest(tree, nu, statistic)
@@ -141,5 +142,6 @@ def test_asymptotic_dataSet(alpha):
     # n.store_asymptotic_dataSet(data_number_for_learner, nu, statistic, alpha, B)
     histogrms, thresholds = n.retrieve_asymptotic_dataSet(alpha)
     for index in range(len(histogrms)):
-        print ('True value ' + str(aux.Alternative_threshold_computation(histogrms[index], nu, statistic).compute_threshold(alpha, B)))
+        print ('True value ' + str(
+            auxiliary_project_functions.Alternative_threshold_computation(histogrms[index], nu, statistic).compute_threshold(alpha, B)))
         print ('Value stored ' + str(thresholds[index]))
