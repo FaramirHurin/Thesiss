@@ -8,9 +8,8 @@ import neuralNetworks as NN
 
 class EWMA_QUantTree:
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
-        pi_values = auxiliary_project_functions.create_bins_combination(len(initial_pi_values))
-        self.pi_values = pi_values
-        self.tree = Incremental_Quant_Tree(pi_values)
+        self.pi_values = initial_pi_values
+        self.tree = Incremental_Quant_Tree(initial_pi_values)
         self.lamb = lamb
         self.nu = nu
         self.statistic = statistic
@@ -63,8 +62,8 @@ class EWMA_QUantTree:
         :return:
         '''
         x = None
-        max_lenght =  self.desired_ARL0 * 3
-        experiments = max_lenght * 20
+        max_lenght =  int(np.floor(self.desired_ARL0/4))
+        experiments = max_lenght * 60
         table = self.fill_table(experiments, max_lenght)
         """means = np.zeros(table.shape[1])
         for index in range(len(means)):
@@ -160,6 +159,11 @@ class EWMA_QUantTree:
             raise Exception
         return change
 
+    def play_round(self, batch):
+        self.compute_EMWA(batch)
+        change = self.find_change()
+        return change
+
 class Offline_EWMA_QuantTree(EWMA_QUantTree):
 
     def build_histogram(self, training_set, definitive = True):
@@ -195,8 +199,7 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
         self.threshold = self.neural_network.predict_value(self.tree.pi_values, self.tree.ndata)
 
     def play_round(self, batch):
-        self.compute_EMWA(batch)
-        change = self.find_change()
+        change = super().play_round(batch)
         if not change:
             if self.buffer:
                 self.modify_histogram(self.buffer)

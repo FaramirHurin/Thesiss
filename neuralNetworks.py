@@ -47,7 +47,7 @@ class NN_man:
 
     def __init__(self, bins_number, max_N, min_N, nodes):
         self.bins_number = bins_number
-        self.standard_learner = nn.MLPRegressor(nodes, early_stopping=True, learning_rate='invscaling', solver = 'adam', validation_fraction= 0.1, verbose=False, alpha=0.1, max_iter=10000, n_iter_no_change=40)
+        self.standard_learner = nn.MLPRegressor(nodes, early_stopping=True, learning_rate='invscaling', solver = 'adam', validation_fraction= 0.1, verbose=True, alpha=0.1, max_iter=10000, n_iter_no_change=40)
 
         self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='invscaling', verbose=False, n_iter_no_change=100, max_iter=2000, early_stopping=True)
         #self.asymptotic_learner = lin.LinearRegression()
@@ -157,6 +157,11 @@ class NN_man:
 
     #Teoria, il rumore interno al singolo istogramma è superiore alla differenza tra istogrammi
     def predict_value(self, histogram, N):
+        try:
+            if N > self.max_N:
+                return self.asymptotic_learner.predict(histogram.reshape(1, -1))
+        except:
+            raise(Exception)
         if N > self.max_N:
             return self.asymptotic_learner.predict(histogram.reshape(1, -1))
         else:

@@ -30,10 +30,11 @@ class Incremental_Quant_Tree(qt.QuantTree):
 class Online_Incremental_QuantTree:
     def __init__(self, pi_values, alpha, statistic):
         self.tree = Incremental_Quant_Tree(pi_values)
-        self.network = nn.NN_man()
+        bins_number = len(pi_values)
+        self.alpha = alpha
+        self.network = nn.NN_man(bins_number, 400 * bins_number, 3 * bins_number, 200)
         self.network.train(alpha)
         self.buffer = None
-        ìthreshold = None
         self.statistic = statistic
         return
 
@@ -41,10 +42,11 @@ class Online_Incremental_QuantTree:
         self.tree.build_histogram(data)
 
     def play_round(self, batch):
-        threshold = self.network.predict_value(self.tree.pi_values, self.tree.leaves)
-        change = self.statistic(self.tree, batch) > threshold
+        threshold = self.network.predict_value(self.tree.pi_values, self.tree.ndata)
+        stat = self.statistic(self.tree, batch)
+        change = stat > threshold
         if not change:
-            if self.buffer:
+            if self.buffer is not None:
                 self.tree.modify_histogram(self.buffer)
             self.buffer = batch
         return change

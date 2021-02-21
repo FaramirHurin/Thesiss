@@ -1,5 +1,4 @@
 import numpy as np
-
 from qtLibrary import libccm as ccm, libquanttree as qt
 
 
@@ -12,7 +11,6 @@ def create_bins_combination(bins_number):
     histogram = histogram / summa
     histogram = np.sort(histogram)
     return histogram
-
 
 class Alternative_threshold_computation:
 
