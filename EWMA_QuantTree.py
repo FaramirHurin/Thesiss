@@ -101,7 +101,7 @@ class EWMA_QUantTree:
         indipendence_percentage = 0.00001
         table = np.zeros([experiments, max_lenght - 1])
         for index in range(experiments):
-            if index % 100 == 0:
+            if index % 500 == 0:
                 print(index)
             if index * indipendence_percentage %1 == 0:
                 tree, ewma_0 = self.prepare_simulated_run()
@@ -133,7 +133,7 @@ class EWMA_QUantTree:
             values[index] = (1 - self.lamb) * values[index - 1] + positive * self.lamb
         return values
 
-    def classic_batch_analysis(self, batch, tree):
+    def classic_batch_analysis(self, batch, tree = None):
         if tree is None:
             tree = self.tree
         stat = self.statistic(tree, batch)
@@ -185,7 +185,7 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
     def __init__(self, initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0):
         super().__init__(initial_pi_values, lamb, statistic, alpha, stop, nu, desired_ARL0)
         bins_number = len(initial_pi_values)
-        self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 200)
+        self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 10)
         self.neural_network.train(self.alpha)
         self.buffer = None
 
@@ -201,7 +201,7 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
     def play_round(self, batch):
         change = super().play_round(batch)
         if not change:
-            if self.buffer:
+            if self.buffer is not None:
                 self.modify_histogram(self.buffer)
             self.buffer = batch
         return change

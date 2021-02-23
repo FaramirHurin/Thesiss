@@ -10,6 +10,8 @@ def create_bins_combination(bins_number):
     summa = np.sum(histogram)
     histogram = histogram / summa
     histogram = np.sort(histogram)
+    averaging_histogram = np.ones(bins_number)/bins_number
+    histogram = (2 * histogram + averaging_histogram)/3
     return histogram
 
 class Alternative_threshold_computation:

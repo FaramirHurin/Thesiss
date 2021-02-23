@@ -32,7 +32,7 @@ class Online_Incremental_QuantTree:
         self.tree = Incremental_Quant_Tree(pi_values)
         bins_number = len(pi_values)
         self.alpha = alpha
-        self.network = nn.NN_man(bins_number, 400 * bins_number, 3 * bins_number, 200)
+        self.network = nn.NN_man(bins_number, 200 * bins_number, 3 * bins_number, 10)
         self.network.train(alpha)
         self.buffer = None
         self.statistic = statistic

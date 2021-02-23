@@ -47,9 +47,9 @@ class NN_man:
 
     def __init__(self, bins_number, max_N, min_N, nodes):
         self.bins_number = bins_number
-        self.standard_learner = nn.MLPRegressor(nodes, early_stopping=True, learning_rate='invscaling', solver = 'adam', validation_fraction= 0.1, verbose=True, alpha=0.1, max_iter=10000, n_iter_no_change=40)
+        self.standard_learner = nn.MLPRegressor(nodes, early_stopping=False, learning_rate='invscaling', solver = 'adam', validation_fraction= 0.1, verbose=False, alpha=0.1, max_iter=5000, n_iter_no_change=40)
 
-        self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='invscaling', verbose=False, n_iter_no_change=100, max_iter=2000, early_stopping=True)
+        self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='invscaling', verbose=False, n_iter_no_change=100, max_iter=4000, early_stopping=False)
         #self.asymptotic_learner = lin.LinearRegression()
         #self.asymptotic_learner = neighbors.KNeighborsRegressor(2 * nodes, weights='distance')
         self.max_N = max_N
