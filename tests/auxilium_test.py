@@ -1,10 +1,8 @@
-import auxiliary_project_functions
-import extendedQuantTree as aux
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import neuralNetworks
-import Old_files.superman as superman
+from main_code import neuralNetworks, auxiliary_project_functions, incremental_QuantTree as aux
+import not_being_used.Old_files.superman as superman
 
 percentage = 0.9
 bins_number = 8

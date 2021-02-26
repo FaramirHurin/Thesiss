@@ -244,6 +244,7 @@ class ChangeDetectionTest:
             stats.append(self.statistic(histogram, W))
 
         stats.sort()
+        debug_stats = np.array(stats)
         stats.insert(0, stats[0] - 1)
         threshold_values = [stats[np.int(np.ceil((1-alpha) * B))] for alpha in alpha_values]
         self.set_threshold(alpha_values, threshold_values)

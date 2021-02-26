@@ -1,12 +1,10 @@
-import auxiliary_project_functions
-import extendedQuantTree as aux
-import EWMA_QuantTree
+from main_code import EWMA_QuantTree, auxiliary_project_functions
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
 
-bins_number = 8
-initial_pi_values = np.ones(bins_number)/bins_number
+bins_number = 16
+initial_pi_values = auxiliary_project_functions.create_bins_combination(bins_number)
 data_number = 2000
 alpha = [0.5]
 desired_ARL0 = 40
@@ -35,7 +33,7 @@ def test_EWMA_once(run_lenght, desired_ARL0, statistic):
     data_handler = auxiliary_project_functions.Data_set_Handler(data_Dimension)
     data = data_handler.return_equal_batch(500)
     statistics = np.zeros(run_lenght)
-    x = EWMA_QuantTree.Offline_EWMA_QuantTree(initial_pi_values, lambd, statistic, alpha, False, nu, desired_ARL0)
+    x = EWMA_QuantTree.Offline_EWMA_QuantTree(initial_pi_values, lambd, statistic, alpha, nu, desired_ARL0)
     x.build_histogram(data)
     for round in range(run_lenght):
         batch = data_handler.return_equal_batch(nu)
@@ -69,7 +67,7 @@ def test_ARLO_once(run_lenght, statistic):
     data = data_handler.return_equal_batch(4000)
     statistics = np.zeros(run_lenght)
     x = EWMA_QuantTree.Offline_EWMA_QuantTree\
-        (initial_pi_values, lambd, statistic, alpha, False, nu, desired_ARL0)
+        (initial_pi_values, lambd, statistic, alpha, nu, desired_ARL0)
     x.build_histogram(data)
     for round in range(run_lenght):
         batch = data_handler.return_equal_batch(nu)

@@ -1,9 +1,7 @@
-import auxiliary_project_functions
-import extendedQuantTree as aux
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-import neuralNetworks
+from main_code import neuralNetworks, auxiliary_project_functions
 
 percentage = 0.1
 bins_number = 8

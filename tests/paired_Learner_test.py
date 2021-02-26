@@ -1,6 +1,5 @@
-import auxiliary_project_functions
-from paired_learner import  Paired_Learner
-import extendedQuantTree as ext
+from main_code import auxiliary_project_functions
+from main_code.paired_learner import  Paired_Learner
 import matplotlib.pyplot as plt
 import qtLibrary.libquanttree as qt
 
