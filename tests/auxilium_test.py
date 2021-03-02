@@ -3,15 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from main_code import neuralNetworks, auxiliary_project_functions, incremental_QuantTree as aux
 import not_being_used.Old_files.superman as superman
+from main_code.auxiliary_project_functions import create_bins_combination
 
 percentage = 0.9
 bins_number = 8
-initial_pi_values = np.ones(bins_number)/bins_number
+initial_pi_values = create_bins_combination(bins_number)
 data_number = 500
-alpha = [0.5]
+alpha = [0.01]
 beta = 0.1
 data_Dimension = 3
-nu = 16
+nu = 32
 B = 4000
 statistic = qt.tv_statistic
 X = [3]
@@ -164,18 +165,18 @@ def compare_regressor_FP0(SKL):
         normal_to_plot.append(normal_value)
         modified_to_plot.append(modified_value)
 
-    print ('Plotting regressor FP0')
-    plt.boxplot([normal_to_plot, modified_to_plot], labels= ['normal', 'with regressor'])
-    plt.title('Regressor FP0')
+    print ('Plotting regressor FPR')
+    plt.boxplot([normal_to_plot, modified_to_plot], labels= ['normal', 'with regressor'], showmeans= True)
+    plt.title('Normal and regressor FPR: target 0.01')
     plt.show()
     return
 
 #Compare power between QT and Extended QT without NN
 def compare_regressor_power(SKL):
-    number_of_tests_for_the_plot = 4
+    number_of_tests_for_the_plot = 10
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 100
+    number_of_batches_per_test = 1000
 
     test = superman.Superman(percentage, SKL, initial_pi_values, data_number,
                              alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
@@ -236,16 +237,17 @@ def alternative_FP0_comparison(batches, points_to_plot):
     plt.show()
 
 #compare_regressor_FP0(1)
-normals = []
-modified = []
-for index in range(1, 2):
-    norm, mod = compare_regressor_power(index)
-    normals.append(np.mean(norm))
-    modified.append(np.mean(mod))
-plt.plot(norm)
-plt.legend('Normal')
-plt.plot(mod)
-plt.legend('Modified')
-plt.show()
-plt.title('Power normal and modified')
+
+max_SKL = 10
+normals = np.zeros(max_SKL-1)
+changed = np.zeros(max_SKL-1)
+for SKL in range(1, max_SKL):
+    norm, mod = compare_regressor_power(SKL)
+    normals[SKL-1] = np.average(norm)
+    changed[SKL-1] = np.average(mod)
+plt.plot(normals, label = 'Classic QT')
+plt.plot(changed, label = 'Regressor')
+plt.ylabel('Power')
+plt.xlabel('Change Magnitude')
+plt.title('Normal and regressor powers')
 plt.show()

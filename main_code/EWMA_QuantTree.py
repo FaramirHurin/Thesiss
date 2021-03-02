@@ -21,8 +21,9 @@ class EWMA_QUantTree:
         self.status = 0
         self.values = [alpha[0]]
         self.training_set = None
+        self.change_round = None
 
-    def build_histogram(self, training_set):
+    def build_histogram(self, training_set, definitive = True):
         self.training_set = training_set
         if self.statistic == qt.pearson_statistic:
             debug = 0
@@ -31,15 +32,17 @@ class EWMA_QUantTree:
         else:
             raise ('Strange exception: ' + str(self.statistic))
         self.tree.build_histogram(training_set)
+        try:
+            if self.threshold:
+                debug = 0
+        except:
+            raise (Exception)
+        self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
+                estimate_quanttree_threshold(self.alpha, 40000)
+        self.alternative_EWMA_thresholds_computation()
         return
 
     def modify_histogram(self, data):
-        '''
-         It modifies the probabilities associated to each bin according to the EXT
-         tree procedure.
-         Currently updating the threshold only at the last round (using MC), need to
-         create an online version that uses the NN at each round
-         '''
         tree = self.tree
         tree.pi_values = tree.pi_values * tree.ndata
         bins = tree.find_bin(data)
@@ -60,9 +63,9 @@ class EWMA_QUantTree:
         :return:
         '''
         x = None
-        max_lenght =  int(self.desired_ARL0/2)
+        max_lenght =  int(self.desired_ARL0/3)
         self.max_len_computed = max_lenght - 1
-        experiments = max_lenght * 150
+        experiments = max_lenght * 200
         table = self.fill_table(experiments, max_lenght)
         self.compute_thresholds_on_table(table)
         return
@@ -137,38 +140,37 @@ class EWMA_QUantTree:
         positive = self.classic_batch_analysis(batch, None)
         self.status += 1
         self.values.append((1 - self.lamb) * self.values[-1] + positive * self.lamb)
-        return self.values[-1]
+        return
 
     def find_change(self):
         # If there is a change we return True
         index = min(self.max_len_computed, self.status)
+        #print('Index is' + str(index))
         try:
-            change = self.values[self.status] > self.EWMA_thresholds[index]
+            if self.values[-1] > self.EWMA_thresholds[index]:
+                self.change_round = self.status
+                return True
         except:
-            print(len(self.EWMA_thresholds), index)
-            raise Exception
-        return change
+            raise Exception #TODO Self.EWMAThresholds are None here for online QT
+        return False
 
     def play_round(self, batch):
+        #assert self.change_round is None
         self.compute_EMWA(batch)
         change = self.find_change()
-        return change
+        if self.change_round is not None:
+            return True
+        else:
+            return False
+
+    def restart(self):
+        self.values = [self.alpha[0]]
+        # assert self.values is not None
+        self.status = 0
+        self.change_round = None
+        return
 
 class Offline_EWMA_QuantTree(EWMA_QUantTree):
-
-    def build_histogram(self, training_set, definitive = True):
-        super().build_histogram(training_set)
-        if definitive:
-            self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
-                estimate_quanttree_threshold(self.alpha, 40000)
-            try:
-                if self.threshold:
-                    debug = 0
-            except:
-                raise(Exception)
-            self.alternative_EWMA_thresholds_computation()
-            #print(self.EWMA_thresholds)
-        return
 
     def modify_histogram(self, data, definitive = False):
         super().modify_histogram(data, definitive)
@@ -190,16 +192,6 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
         self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 10)
         self.neural_network.train(self.alpha)
         self.buffer = None
-
-    def build_histogram(self, training_set):
-        super().build_histogram(training_set)
-        self.threshold = self.neural_network.predict_value(self.tree.pi_values, self.tree.ndata)
-        try:
-            if self.threshold:
-                debug = 0
-        except:
-            raise (Exception)
-        self.EWMA_thresholds = self.alternative_EWMA_thresholds_computation()
 
     def modify_histogram(self, data):
         super().modify_histogram(data)

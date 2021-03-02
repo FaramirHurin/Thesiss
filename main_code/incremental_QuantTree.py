@@ -28,6 +28,7 @@ class Incremental_Quant_Tree(qt.QuantTree):
         return
 
 
+
 class Online_Incremental_QuantTree:
     def __init__(self, pi_values, alpha, statistic):
         self.tree = Incremental_Quant_Tree(pi_values)
@@ -52,5 +53,7 @@ class Online_Incremental_QuantTree:
                 self.tree.modify_histogram(self.buffer)
             self.buffer = batch
         return change
+
+
 
 

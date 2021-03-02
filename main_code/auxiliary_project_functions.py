@@ -11,7 +11,7 @@ def create_bins_combination(bins_number):
     histogram = histogram / summa
     histogram = np.sort(histogram)
     averaging_histogram = np.ones(bins_number)/bins_number
-    histogram = (3 * histogram + averaging_histogram)/4
+    histogram = (5 * histogram + averaging_histogram)/6
     return histogram
 
 class Alternative_threshold_computation:

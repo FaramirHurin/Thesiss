@@ -62,7 +62,6 @@ class Superman:
                                   lambd * (self.statistic(tree, batch) > thr)
         return statistics
 
-
     def run_modified_algorithm_without_learner(self, number_of_experiments, equal = True):
         initial_db_size = int(len(self.data_set)*self.percentage)
         initial_data = self.data_set[0:initial_db_size]
@@ -139,13 +138,14 @@ class Superman:
     def run_modified_algorithm_with_learner(self, number_of_experiments, min_N, alpha, equal = True):
         initial_db_size = int(len(self.data_set) * self.percentage)
         initial_data = self.data_set[0:initial_db_size]
-        sequent_data = self.data_set[initial_db_size:len(self.data_set)]
+        sequent_data = self.data_set[initial_db_size:]
         tree = Incremental_Quant_Tree(self.initial_pi_values)
         tree.build_histogram(initial_data)
         tree.modify_histogram(sequent_data)
-        man = NN_man(50, self.max_N, 30, 200)
+        man = NN_man(bins_number=len(self.initial_pi_values), max_N=self.max_N, min_N=30, nodes=20)
         man.train(alpha)
         thr = man.predict_value(tree.pi_values, tree.ndata)
+        thr2 = qt.ChangeDetectionTest(tree, self.nu, self.statistic).estimate_quanttree_threshold(alpha, 6000)
         value = 0
         for counter in range(number_of_experiments):
             if equal:
