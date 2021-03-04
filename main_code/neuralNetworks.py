@@ -49,7 +49,7 @@ class NN_man:
         self.bins_number = bins_number
         self.standard_learner = nn.MLPRegressor(nodes, early_stopping= True,
                                                 learning_rate='invscaling', solver = 'adam',
-                                                validation_fraction= 0.1, verbose=True, alpha=0.15,
+                                                validation_fraction= 0.1, verbose=False, alpha=0.15,
                                                 max_iter=5000, n_iter_no_change = 60)
 
         self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='adaptive',

@@ -151,11 +151,11 @@ class EWMA_QUantTree:
                 self.change_round = self.status
                 return True
         except:
-            raise Exception #TODO Self.EWMAThresholds are None here for online QT
+            raise Exception
         return False
 
     def play_round(self, batch):
-        #assert self.change_round is None
+        assert self.change_round is None
         self.compute_EMWA(batch)
         change = self.find_change()
         if self.change_round is not None:
@@ -165,7 +165,7 @@ class EWMA_QUantTree:
 
     def restart(self):
         self.values = [self.alpha[0]]
-        # assert self.values is not None
+        assert self.values is not None
         self.status = 0
         self.change_round = None
         return
@@ -189,7 +189,7 @@ class Online_EWMA_QUantTree(EWMA_QUantTree):
     def __init__(self, initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0):
         super().__init__(initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0)
         bins_number = len(initial_pi_values)
-        self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 10)
+        self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 30)
         self.neural_network.train(self.alpha)
         self.buffer = None
 

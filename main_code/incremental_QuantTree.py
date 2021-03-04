@@ -38,6 +38,8 @@ class Online_Incremental_QuantTree:
         self.network.train(alpha)
         self.buffer = None
         self.statistic = statistic
+        self.change_round = None
+        self.round = 0
         return
 
     def build_histogram(self, data):
@@ -52,7 +54,14 @@ class Online_Incremental_QuantTree:
             if self.buffer is not None:
                 self.tree.modify_histogram(self.buffer)
             self.buffer = batch
+        if change:
+            self.change_round = self.round
+        self.round +=1
         return change
+
+    def restart(self):
+        self.round = 0
+        self.change_round = None
 
 
 

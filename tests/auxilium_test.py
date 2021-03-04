@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from main_code import neuralNetworks, auxiliary_project_functions, incremental_QuantTree as aux
 import not_being_used.Old_files.superman as superman
 from main_code.auxiliary_project_functions import create_bins_combination
+import pandas as pd
 
 percentage = 0.9
 bins_number = 8
@@ -173,10 +174,10 @@ def compare_regressor_FP0(SKL):
 
 #Compare power between QT and Extended QT without NN
 def compare_regressor_power(SKL):
-    number_of_tests_for_the_plot = 10
+    number_of_tests_for_the_plot = 20
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 1000
+    number_of_batches_per_test = 4000
 
     test = superman.Superman(percentage, SKL, initial_pi_values, data_number,
                              alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
@@ -239,15 +240,21 @@ def alternative_FP0_comparison(batches, points_to_plot):
 #compare_regressor_FP0(1)
 
 max_SKL = 10
-normals = np.zeros(max_SKL-1)
-changed = np.zeros(max_SKL-1)
-for SKL in range(1, max_SKL):
+normals = np.zeros(max_SKL)
+changed = np.zeros(max_SKL)
+to_frame = np.zeros([2*max_SKL, max_SKL])
+for SKL in range(max_SKL):
     norm, mod = compare_regressor_power(SKL)
-    normals[SKL-1] = np.average(norm)
-    changed[SKL-1] = np.average(mod)
-plt.plot(normals, label = 'Classic QT')
-plt.plot(changed, label = 'Regressor')
-plt.ylabel('Power')
+    to_frame[SKL,: 20] = norm
+    to_frame[SKL, 21:] = mod
+    normals[SKL] = np.average(norm)
+    changed[SKL] = np.average(mod)
+frame = pd.DataFrame(to_frame)
+frame.to_csv('Experiments.csv')
+plt.plot(normals, 'b', label = 'Classic QT')
+plt.plot(changed, 'r', label = 'Regressor')
+plt.legend()
+plt.ylabel('Percentage of bathes recognized as positive')
 plt.xlabel('Change Magnitude')
-plt.title('Normal and regressor powers')
+plt.title('Normal and regressor powers: blue is normal, red with regressor')
 plt.show()
