@@ -2,10 +2,13 @@ from main_code.incremental_QuantTree import Incremental_Quant_Tree
 import numpy as np
 import qtLibrary.libquanttree as qt
 from main_code import neuralNetworks as NN
+from IPython.core.debugger import set_trace
 
+MAX_LENGHT = 40
+EXPERIMENTS = MAX_LENGHT * 1000
 
 class EWMA_QUantTree:
-    def __init__(self, initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0):
+    def __init__(self, initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0, ewma_thresholds = None):
         self.pi_values = initial_pi_values
         self.tree = Incremental_Quant_Tree(initial_pi_values)
         self.lamb = lamb
@@ -16,8 +19,11 @@ class EWMA_QUantTree:
         self.beta = 1 / desired_ARL0  # 1/ARL0
         self.desired_ARL0 = desired_ARL0
         self.threshold = None
-        self.max_len_computed = None
-        self.EWMA_thresholds = []
+        self.EWMA_thresholds = ewma_thresholds
+        if ewma_thresholds is not None:
+            self.max_len_computed = len(ewma_thresholds) -1
+        else:
+            self.max_len_computed = None
         self.status = 0
         self.values = [alpha[0]]
         self.training_set = None
@@ -38,8 +44,9 @@ class EWMA_QUantTree:
         except:
             raise (Exception)
         self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
-                estimate_quanttree_threshold(self.alpha, 40000)
-        self.alternative_EWMA_thresholds_computation()
+                estimate_quanttree_threshold(self.alpha, 6000)
+        if self.EWMA_thresholds is None:
+            self.alternative_EWMA_thresholds_computation()
         return
 
     def modify_histogram(self, data):
@@ -62,10 +69,11 @@ class EWMA_QUantTree:
         threshold is computed. The selected rows are then eliminated.
         :return:
         '''
+        print('Strano')
         x = None
-        max_lenght =  int(self.desired_ARL0/3)
+        max_lenght = MAX_LENGHT
         self.max_len_computed = max_lenght - 1
-        experiments = max_lenght * 200
+        experiments = EXPERIMENTS
         table = self.fill_table(experiments, max_lenght)
         self.compute_thresholds_on_table(table)
         return
@@ -76,6 +84,8 @@ class EWMA_QUantTree:
         if table.shape[0] < 1/self.beta or table.shape[1] < 1:
             # End Cycle
             return
+        if self.EWMA_thresholds is None:
+            self.EWMA_thresholds = []
         values = table[:, 0]
         vals = np.sort(values)
         threshold = vals[int(len(vals) * (1 - self.beta))]
@@ -93,10 +103,12 @@ class EWMA_QUantTree:
     def fill_table(self, experiments, max_lenght):
         #Indipendence percentage represents the number of different trees used for threshold computation.
         #Used to average over the noise on trees generation
-        indipendence_percentage = 1/1000
+        indipendence_percentage = 1/4000
         table = np.zeros([experiments, max_lenght])
         tree = None
         for index in range(experiments):
+            if index % 1000 == 0:
+                print (index)
             if index * indipendence_percentage %1 == 0:
                 tree = self.prepare_simulated_run()
             values = self.simulate_EWMA_run(max_lenght, tree)
@@ -172,8 +184,9 @@ class EWMA_QUantTree:
 
 class Offline_EWMA_QuantTree(EWMA_QUantTree):
 
+
     def modify_histogram(self, data, definitive = False):
-        super().modify_histogram(data, definitive)
+        super().modify_histogram(data)
         if definitive:
             self.threshold = qt.ChangeDetectionTest(self.tree, self.nu, self.statistic).\
                 estimate_quanttree_threshold(self.alpha, 40000)
@@ -186,8 +199,8 @@ class Offline_EWMA_QuantTree(EWMA_QUantTree):
         return
 
 class Online_EWMA_QUantTree(EWMA_QUantTree):
-    def __init__(self, initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0):
-        super().__init__(initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0)
+    def __init__(self, initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0, ewma_thresholds):
+        super().__init__(initial_pi_values, lamb, statistic, alpha, nu, desired_ARL0, ewma_thresholds)
         bins_number = len(initial_pi_values)
         self.neural_network = NN.NN_man(bins_number, bins_number * 200, bins_number * 2, 30)
         self.neural_network.train(self.alpha)

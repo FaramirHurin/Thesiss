@@ -3,7 +3,10 @@ import pandas as pd
 from sklearn import neural_network as nn
 import qtLibrary.libquanttree as qt
 from main_code.auxiliary_project_functions import create_bins_combination, Alternative_threshold_computation
+import pickle as pk
+import path
 
+PICKLE = True
 
 class DataSet_for_the_learner:
 
@@ -47,20 +50,33 @@ class NN_man:
 
     def __init__(self, bins_number, max_N, min_N, nodes):
         self.bins_number = bins_number
-        self.standard_learner = nn.MLPRegressor(nodes, early_stopping= True,
-                                                learning_rate='invscaling', solver = 'adam',
-                                                validation_fraction= 0.1, verbose=False, alpha=0.15,
-                                                max_iter=5000, n_iter_no_change = 60)
+        if not PICKLE:
+            self.standard_learner = nn.MLPRegressor(nodes, early_stopping=True,
+                                                    learning_rate='invscaling', solver='adam',
+                                                    validation_fraction=0.1, verbose=False, alpha=0.15,
+                                                    max_iter=5000, n_iter_no_change=60)
 
-        self.asymptotic_learner = nn.MLPRegressor(nodes, solver = 'adam', learning_rate='adaptive',
-                                                  verbose=False, n_iter_no_change = 60, max_iter=4000,
-                                                  early_stopping=False)
+            self.asymptotic_learner = nn.MLPRegressor(nodes, solver='adam', learning_rate='adaptive',
+                                                      verbose=False, n_iter_no_change=60, max_iter=4000,
+                                                      early_stopping=False)
         #self.asymptotic_learner = lin.LinearRegression()
         #self.asymptotic_learner = neighbors.KNeighborsRegressor(2 * nodes, weights='distance')
         self.max_N = max_N
         self.min_N = min_N
         self.asymptotic_normalizer = None
         return
+
+    def pickle_learners(self, alpha):
+        with open(r'C:\Users\dalun\PycharmProjects\Thesiss\learner_dataset\network.pickle', 'rb') as fil:
+            dictionary = pk.load(fil)
+            if alpha == [0.01] or alpha == 0.01:
+                self.standard_learner = dictionary[('normal', 0.01)]
+                self.asymptotic_learner = dictionary[('asymptotic', 0.01)]
+            else:
+                self.asymptotic_learner = dictionary[('Asymptotic', 0.5)]
+                self.standard_learner = dictionary[('normal', 0.5)]
+            # print('I pickle')
+            return
 
     def compute_dummy_prediction(self):
         histograms, thresholds = self.retrieve_asymptotic_dataSet()
@@ -157,18 +173,19 @@ class NN_man:
         return
 
     def train(self, alpha):
+        if PICKLE:
+            self.pickle_learners(alpha)
+            return
         self.normal_train(alpha)
         self.asymptotic_train(alpha)
+        return
 
     #Teoria, il rumore interno al singolo istogramma è superiore alla differenza tra istogrammi
     def predict_value(self, histogram, N):
-        try:
-            if N > self.max_N:
-                return self.asymptotic_learner.predict(histogram.reshape(1, -1))
-        except:
-            raise(Exception)
-        if N > self.max_N:
+
+        if N > self.max_N: # and False:
             return self.asymptotic_learner.predict(histogram.reshape(1, -1))
+
         else:
             hist = list(histogram)
             hist.append(N)

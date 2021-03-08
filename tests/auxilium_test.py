@@ -6,7 +6,7 @@ import not_being_used.Old_files.superman as superman
 from main_code.auxiliary_project_functions import create_bins_combination
 import pandas as pd
 
-percentage = 0.9
+percentage = 0.1
 bins_number = 8
 initial_pi_values = create_bins_combination(bins_number)
 data_number = 500
@@ -173,17 +173,19 @@ def compare_regressor_FP0(SKL):
     return
 
 #Compare power between QT and Extended QT without NN
+# Cost given by the roto-translation
 def compare_regressor_power(SKL):
-    number_of_tests_for_the_plot = 20
+    number_of_tests_for_the_plot = 5
     normal_to_plot = []
     modified_to_plot = []
-    number_of_batches_per_test = 4000
+    number_of_batches_per_test = 1000
 
     test = superman.Superman(percentage, SKL, initial_pi_values, data_number,
                              alpha, bins_number, data_Dimension, nu, B, statistic, max_N,
                              data_number_for_learner)
 
     for index in range(number_of_tests_for_the_plot):
+        print('Test number ' + str(index))
         test.create_training_set_for_QT()
         normal_value = test.run_normal_algorithm(number_of_batches_per_test, False)
         modified_value = test.run_modified_algorithm_with_learner(number_of_batches_per_test, 20, alpha, False)
@@ -237,20 +239,23 @@ def alternative_FP0_comparison(batches, points_to_plot):
     plt.title('False Positive Rate: random pi_values - 8 bins')
     plt.show()
 
-#compare_regressor_FP0(1)
+compare_regressor_FP0(1)
 
-max_SKL = 10
+max_SKL = 5
 normals = np.zeros(max_SKL)
 changed = np.zeros(max_SKL)
-to_frame = np.zeros([2*max_SKL, max_SKL])
+columns = 10
+half = int(columns/2)
+to_frame = np.zeros([max_SKL, columns])
 for SKL in range(max_SKL):
+    print('SKL: ' + str(SKL))
     norm, mod = compare_regressor_power(SKL)
-    to_frame[SKL,: 20] = norm
-    to_frame[SKL, 21:] = mod
+    to_frame[SKL, :half] = norm
+    to_frame[SKL, half:] = mod
     normals[SKL] = np.average(norm)
     changed[SKL] = np.average(mod)
 frame = pd.DataFrame(to_frame)
-frame.to_csv('Experiments.csv')
+frame.to_csv('Experiments2.csv')
 plt.plot(normals, 'b', label = 'Classic QT')
 plt.plot(changed, 'r', label = 'Regressor')
 plt.legend()
