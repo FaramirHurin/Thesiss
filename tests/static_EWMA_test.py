@@ -1,4 +1,5 @@
-from main_code import EWMA_QuantTree, auxiliary_project_functions
+from main_code import auxiliary_project_functions
+from main_code.algorithms import EWMA_QuantTree
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt

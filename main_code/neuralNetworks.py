@@ -4,7 +4,8 @@ from sklearn import neural_network as nn
 import qtLibrary.libquanttree as qt
 from main_code.auxiliary_project_functions import create_bins_combination, Alternative_threshold_computation
 import pickle as pk
-import path
+#from keras.models import Sequential
+#from keras.layers import LSTM, Dense, Dropout
 
 PICKLE = True
 
@@ -147,9 +148,9 @@ class NN_man:
         if not isinstance(alpha, float):
             alpha = alpha[0]
         if alpha == 0.01:
-            df = pd.read_csv(r'../learner_dataset/Asymptotic_0._1')
+            df = pd.read_csv(r'../learner_dataset/net_training_set/Asymptotic_0._1')
         elif alpha == 0.5:
-            df = pd.read_csv(r'../learner_dataset/Asymptotic_0_5')
+            df = pd.read_csv(r'../learner_dataset/net_training_set/Asymptotic_0_5')
         else:
             raise Exception('alpha is wrong, expected 0.1 or 0.5, got' + str(alpha))
         df_numpy = df.to_numpy()
@@ -192,5 +193,44 @@ class NN_man:
             histogram = np.array(hist)
             histogram = np.sort(histogram)
             return self.standard_learner.predict(histogram.reshape(1, -1))
+        return
 
+class Recurrent_Neural:
 
+    #Creates the net with the various layers
+    #TODO Handle Tensorflow FutureWarning
+    def __init__(self):
+        """
+        self.model = Sequential()
+        self.model.add(LSTM(units=10, return_sequences=True))
+        self.model.add(Dense(units=10))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(units=1))
+        self.model.compile(metrics = 'mean_squared_error', optimizer = 'adam')
+        self.X_normalizer = None
+        self.Y_normalizer = None
+        """
+        return
+
+    #Retrieves data from a dataset
+    def train(self, alpha):
+        return
+
+    #Uses the histogram received to make a prediction.
+    #It stores the past history to be able to make a prediction on a time serie
+    def predict(self, histogram):
+        return
+
+    def normalize(self, input):
+        if len(input) == 1:
+            debug = 0
+        else:
+            debug = 0
+        return
+
+    def scale_back(self, input):
+        if len(input) == 1:
+            debug = 0
+        else:
+            debug = 0
+        return

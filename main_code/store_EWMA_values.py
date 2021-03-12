@@ -1,15 +1,12 @@
 #Imports
 
 # My code
-from main_code.EWMA_QuantTree import Offline_EWMA_QuantTree
+from main_code.algorithms.EWMA_QuantTree import Offline_EWMA_QuantTree
 from main_code.auxiliary_project_functions import create_bins_combination, Data_set_Handler
 import qtLibrary.libquanttree as qt
 
 #Standard libraries
 import pickle
-import numpy as np
-import pandas as pd
-from collections import Counter
 import matplotlib.pyplot as plt
 
 #Initialization
@@ -21,7 +18,7 @@ nu = 32
 
 #Trees parameters
 training_N = 5 * bins_number
-lamb = 0.005
+lamb = 0.001
 alpha_EWMA = [0.5]
 alpha_QT = [0.01]
 desired_ARL0 = int(1/alpha_QT[0])

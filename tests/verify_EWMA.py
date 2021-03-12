@@ -1,7 +1,5 @@
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import main_code.EWMA_QuantTree as ew
+import main_code.algorithms.EWMA_QuantTree as ew
 import main_code.auxiliary_project_functions as aux
 import qtLibrary.libquanttree as qt
 alpha = [0.5]

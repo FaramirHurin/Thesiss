@@ -8,9 +8,9 @@ B = 4000
 
 #Actual level = 4000
 
-file = 'Thresholds_TV_1.csv'
+file = 'net_training_set/Thresholds_TV_1.csv'
 
-frame = pd.read_csv('Thresholds_TV_1.csv')
+frame = pd.read_csv('net_training_set/Thresholds_TV_1.csv')
 frame.drop(frame.columns[0], axis = 1, inplace = True)
 for index in range(2400, 3000):
     tree = qt.QuantTree(frame.iloc[index, :16])

@@ -1,5 +1,5 @@
 from main_code import auxiliary_project_functions
-from main_code.paired_learner import  Paired_Learner
+from main_code.algorithms.paired_learner import  Paired_Learner
 import matplotlib.pyplot as plt
 import qtLibrary.libquanttree as qt
 

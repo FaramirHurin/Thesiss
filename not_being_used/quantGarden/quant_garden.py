@@ -2,7 +2,8 @@ import qtLibrary.libquanttree as qt
 import numpy as np
 from copy import copy
 import logging, sys
-from main_code import neuralNetworks, incremental_QuantTree as aux
+from main_code import neuralNetworks
+from main_code.algorithms import incremental_QuantTree as aux
 
 bins_number = 4
 initial_pi_values = np.ones(bins_number)/bins_number
@@ -95,7 +96,7 @@ class Quant_garden:
             thresholds[index1] = self.hidden_neural.predict_value\
                 (self.garden[index1].pi_values, self.garden[index1].ndata)
             for index2 in range(self.K - 1):
-                self.table[index1][index2] = self.table[index1 + 1][index2 + 1]
+                self.TABLE[index1][index2] = self.TABLE[index1 + 1][index2 + 1]
         thresholds[-1] =  self.hidden_neural.predict_value\
                 (self.garden[-1].pi_values, self.garden[-1].ndata)
         """

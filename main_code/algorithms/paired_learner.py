@@ -1,4 +1,5 @@
-from main_code import neuralNetworks as NN, EWMA_QuantTree as ewma, incremental_QuantTree as ext
+from main_code import neuralNetworks as NN
+from main_code.algorithms import incremental_QuantTree as ext, EWMA_QuantTree as ewma
 
 """
 The interface for the class is given by the init and play_round method.

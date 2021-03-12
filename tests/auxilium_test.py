@@ -1,8 +1,9 @@
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-from main_code import neuralNetworks, auxiliary_project_functions, incremental_QuantTree as aux
-import not_being_used.Old_files.superman as superman
+from main_code import neuralNetworks, auxiliary_project_functions
+from main_code.algorithms import incremental_QuantTree as aux
+import main_code.superman as superman
 from main_code.auxiliary_project_functions import create_bins_combination
 import pandas as pd
 
@@ -10,7 +11,7 @@ percentage = 0.1
 bins_number = 8
 initial_pi_values = create_bins_combination(bins_number)
 data_number = 500
-alpha = [0.01]
+alpha = [0.5]
 beta = 0.1
 data_Dimension = 3
 nu = 32
@@ -150,7 +151,7 @@ def compare_power_with_asymptotic(SKL):
 
 #Compare FP0 between QT and Extended QT with NN
 def compare_regressor_FP0(SKL):
-    number_of_tests_for_the_plot = 10
+    number_of_tests_for_the_plot = 15
     normal_to_plot = []
     modified_to_plot = []
     number_of_batches_per_test = 3000
@@ -168,7 +169,7 @@ def compare_regressor_FP0(SKL):
 
     print ('Plotting regressor FPR')
     plt.boxplot([normal_to_plot, modified_to_plot], labels= ['normal', 'with regressor'], showmeans= True)
-    plt.title('Normal and regressor FPR: target 0.01')
+    plt.title('Normal and regressor FPR: target' + str(alpha))
     plt.show()
     return
 
@@ -241,6 +242,7 @@ def alternative_FP0_comparison(batches, points_to_plot):
 
 compare_regressor_FP0(1)
 
+"""
 max_SKL = 5
 normals = np.zeros(max_SKL)
 changed = np.zeros(max_SKL)
@@ -263,3 +265,4 @@ plt.ylabel('Percentage of bathes recognized as positive')
 plt.xlabel('Change Magnitude')
 plt.title('Normal and regressor powers: blue is normal, red with regressor')
 plt.show()
+"""
