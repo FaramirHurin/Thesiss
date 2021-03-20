@@ -28,7 +28,7 @@ legend = {
 
 
 
-table = np.zeros([100000, bins + 2])
+table = np.zeros([3, bins + 2])
 print(table.shape)
 for index in range(table.shape[0]):
     table[index,:bins] = aux.create_bins_combination(bins)

@@ -199,7 +199,7 @@ def compare_regressor_power(SKL):
     plt.title('Regressor: power')
     plt.show()
     """
-
+"""
 def store_datestets():
     nodes = 3
     n = neuralNetworks.NN_man(bins_number, max_N, min_N, nodes)
@@ -263,3 +263,6 @@ plt.ylabel('Percentage of bathes recognized as positive')
 plt.xlabel('Change Magnitude')
 plt.title('Normal and regressor powers: blue is normal, red with regressor')
 plt.show()
+"""
+
+compare_FP0(1)
