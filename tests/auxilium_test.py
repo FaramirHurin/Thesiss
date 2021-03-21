@@ -1,8 +1,9 @@
 import qtLibrary.libquanttree as qt
 import numpy as np
 import matplotlib.pyplot as plt
-from main_code import neuralNetworks, auxiliary_project_functions, incremental_QuantTree as aux
-import not_being_used.Old_files.superman as superman
+from main_code import neuralNetworks, auxiliary_project_functions
+from main_code.algorithms import incremental_QuantTree as aux
+import main_code.superman as superman
 from main_code.auxiliary_project_functions import create_bins_combination
 import pandas as pd
 
@@ -168,7 +169,7 @@ def compare_regressor_FP0(SKL):
 
     print ('Plotting regressor FPR')
     plt.boxplot([normal_to_plot, modified_to_plot], labels= ['normal', 'with regressor'], showmeans= True)
-    plt.title('Normal and regressor FPR: target 0.01')
+    plt.title('Normal and regressor FPR: target' + str(alpha))
     plt.show()
     return
 
@@ -199,7 +200,7 @@ def compare_regressor_power(SKL):
     plt.title('Regressor: power')
     plt.show()
     """
-"""
+
 def store_datestets():
     nodes = 3
     n = neuralNetworks.NN_man(bins_number, max_N, min_N, nodes)
@@ -266,3 +267,4 @@ plt.show()
 """
 
 compare_FP0(1)
+"""

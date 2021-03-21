@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import matplotlib.pyplot as plt
 from abc import ABCMeta, abstractmethod
 from sklearn.decomposition import PCA
 
@@ -228,7 +228,8 @@ class ChangeDetectionTest:
         tau = threshold.get((stat_name, alpha, nbin, ndata, nu))
         return tau
 
-    def estimate_quanttree_threshold(self, alpha, B):
+    #equal_percentage requires to have only one value for alpha
+    def estimate_quanttree_threshold(self, alpha, B, equal_percentage = False):
         if not isinstance(alpha, list):
             alpha_values = (alpha)
         else:
@@ -245,13 +246,25 @@ class ChangeDetectionTest:
 
         stats.sort()
         debug_stats = np.array(stats)
+        #plt.plot(debug_stats)
+        #plt.title('Debug stats')
+        #plt.show()
         stats.insert(0, stats[0] - 1)
         threshold_values = [stats[np.int(np.ceil((1-alpha) * B))] for alpha in alpha_values]
+        if equal_percentage:
+            indeces = np.where(debug_stats == threshold_values[0])
+            if not np.max(indeces) - np.min(indeces) == 0:
+                percentage = max((np.max(indeces) - len(debug_stats)/2) /(np.max(indeces) - np.min(indeces)), 0)
+            else:
+                percentage = 0
         self.set_threshold(alpha_values, threshold_values)
         x = np.array(stats)
         if len(alpha_values) == 1:
             threshold_values = threshold_values[0]
-        return threshold_values
+        if equal_percentage:
+            return threshold_values, percentage
+        else:
+            return threshold_values
 
     def reject_null_hypothesis(self, W, alpha):
         y = self.statistic(self.model, W)

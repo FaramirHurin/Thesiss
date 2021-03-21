@@ -1,4 +1,4 @@
-import libquanttree as qt
+import qtLibrary.libquanttree as qt
 
 #We can train nets here, store in a file and use them during code
 
