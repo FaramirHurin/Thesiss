@@ -137,7 +137,7 @@ def plot_normal_computation():
 def test_asymptotic_dataSet(alpha):
     nodes = 10000
     n = neuralNetworks.NN_man(bins_number, 40, 20, nodes)
-    # n.store_asymptotic_dataSet(data_number_for_learner, nu, statistic, alpha, B)
+    # n.store_asymptotic_dataSet(data_number_for_learner, NU, STATISTIC, alpha, B)
     histogrms, thresholds = n.retrieve_asymptotic_dataSet(alpha)
     for index in range(len(histogrms)):
         print ('True value ' + str(

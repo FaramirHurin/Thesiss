@@ -55,7 +55,7 @@ class Quant_garden:
                 self.hidden_thresholds[index] = copy(self.hidden_thresholds[index + 1])
         if self.uses_double_check:
             self.hidden_thresholds[-1] = self.hidden_neural.predict_value(np.sort(new_tree.pi_values), new_tree.ndata)
-            #self.hidden_thresholds[-1] = qt.ChangeDetectionTest(new_tree, self.nu, self.statistic).\
+            #self.hidden_thresholds[-1] = qt.ChangeDetectionTest(new_tree, self.NU, self.STATISTIC).\
                 #estimate_quanttree_threshold(self.beta, 4000)
         self.garden[-1] = new_tree
         return
@@ -72,7 +72,7 @@ class Quant_garden:
         add_vector = []
         for index in range (to_average):
             to_add = qt.ChangeDetectionTest\
-                (self.garden[-1],self.nu, self.statistic).estimate_quanttree_threshold(self.alpha, number_of_points)
+                (self.garden[-1],self.NU, self.STATISTIC).estimate_quanttree_threshold(self.alpha, number_of_points)
 
             threshold = threshold + to_add
             add_vector.append(to_add)

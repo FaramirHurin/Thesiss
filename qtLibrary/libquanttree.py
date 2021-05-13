@@ -98,7 +98,8 @@ class QuantTree(Histogram):
                 try:
                     self.leaves[:, i_leaf] = [i_dim, limits[0, i_dim], x_tilde[L]]
                 except:
-                    print (self.leaves, i_dim, x_tilde, limits)
+                    #print (self.leaves, i_dim, x_tilde, limits)
+                    print('.')
                     raise Exception
                 limits[0, i_dim] = x_tilde[L]
                 idx_sorted = idx_sorted[0:L]
@@ -106,7 +107,8 @@ class QuantTree(Histogram):
                 try:
                     self.leaves[:, i_leaf] = [i_dim, x_tilde[-L], limits[1, i_dim]]
                 except:
-                    print (self.leaves, i_dim, x_tilde, limits)
+                    print('.')
+                    #print (self.leaves, i_dim, x_tilde, limits)
                     raise Exception
                 limits[1, i_dim] = x_tilde[-L]
                 idx_sorted = idx_sorted[-L:]

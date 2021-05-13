@@ -1,6 +1,18 @@
 import numpy as np
 import qtLibrary.libquanttree as qt
-from main_code import neuralNetworks as nn
+from sklearn.neural_network import MLPRegressor
+import pickle
+from  sklearn.preprocessing import Normalizer
+import logging
+logger = logging.getLogger('Logging_data_creation')
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %H:%M:%S')
+
+
+
+# from main_code import neuralNetworks as nn
 
 
 # Uses cuts on space instead of the ones on probabilites, equal to normal cut with N=Inf
@@ -16,7 +28,7 @@ class Incremental_Quant_Tree(qt.QuantTree):
         super().build_histogram(data, do_PCA)
         self.ndata = len(data)
 
-    def modify_histogram(self, data, definitive = True):
+    def modify_histogram(self, data, definitive=True):
         self.pi_values = self.pi_values * self.ndata
         bins = self.find_bin(data)
         vect_to_add = np.zeros(len(self.pi_values))
@@ -28,16 +40,16 @@ class Incremental_Quant_Tree(qt.QuantTree):
         return
 
 
-
 class Online_Incremental_QuantTree:
     def __init__(self, pi_values, alpha, statistic):
         self.tree = Incremental_Quant_Tree(pi_values)
-        bins_number = len(pi_values)
+        # bins_number = len(pi_values)
         self.alpha = alpha
         self.statistic = statistic
+        self.network = Neural_Network()
 
-        self.network = nn.NN_man(bins_number, 200 * bins_number, 3 * bins_number, 30)
-        self.network.train(alpha)
+        # self.network = nn.NN_man(bins_number, 200 * bins_number, 3 * bins_number, 30)
+        # self.network.train(alpha)
 
         self.buffer = None
         self.change_round = None
@@ -49,14 +61,14 @@ class Online_Incremental_QuantTree:
 
     def play_round(self, batch):
         threshold = self.network.predict_value(self.tree.pi_values, self.tree.ndata)
-        #threshold2 = qt.ChangeDetectionTest(self.tree, len(batch), self.statistic).estimate_quanttree_threshold(self.alpha, 4000)
+        # threshold2 = qt.ChangeDetectionTest(self.tree, len(batch), self.STATISTIC).estimate_quanttree_threshold(self.alpha, 4000)
         stat = self.statistic(self.tree, batch)
         change = stat > threshold
         if not change:
             self.update_model(batch)
         else:
             self.change_round = self.round
-        self.round +=1
+        self.round += 1
         return change
 
     def restart(self):
@@ -70,6 +82,71 @@ class Online_Incremental_QuantTree:
         self.buffer = batch
         return
 
+
+class Neural_Network:
+
+    def __init__(self):
+        # sys.path.append('new_testsAndAlgorithms')
+        DEBUG = 0
+        file = open("dictionary_to_learn.pickle", 'rb')
+        self.normal_scaler = Normalizer()
+        self.asymptotic_scaler = Normalizer()
+        self.dictionary = pickle.load(file)
+        file.close() #adam, lbfgs, sgd
+        self.normal_network = MLPRegressor\
+            (hidden_layer_sizes=300, solver='adam', max_iter = 5000, verbose=False, learning_rate_init=0.001, early_stopping=False,
+             learning_rate='invscaling', shuffle=False, validation_fraction=0.2, alpha= 0.001, n_iter_no_change=100, random_state=False) #lbfgs
+        self.asymptotic_network = MLPRegressor (hidden_layer_sizes=300, solver='adam', max_iter = 5000, verbose=False, learning_rate_init=0.001, early_stopping=True,
+             learning_rate='invscaling', shuffle=False, validation_fraction=0.2, alpha= 0.0001, n_iter_no_change=100)
+        # logger.debug('Number of nodes is:' + str(self.normal_network.hidden_layer_sizes) + ' and solver is ' + str(self.normal_network.solver) )
+        # if self.normal_network.solver != 'lbfgs':
+        #     logger.debug('Shuffle is ' + str(self.normal_network.shuffle))
+
+        self.train_network(dictionary=self.dictionary)
+        # self.max_N = 0
+        return
+
+    def get_dictionary(self):
+        return self.dictionary
+
+    def train_network(self, dictionary):
+        normal_bins_series = dictionary['Normal Bins Series']
+        normal_thresholds_series = dictionary['Normal thresholds series']
+        ndata_series = dictionary['ndata series']
+        asymptotic_bins_series = dictionary['Asymptotic bins series']
+        asymptotic_thresholds_series = dictionary['Asymptotic thresholds series']
+        self.max_N = max(ndata_series)
+        fat_ndata_Series = (30 * ndata_series)
+        flat_ndata_Series = [elem for elem in fat_ndata_Series]
+        normal_X_train = [normal_bins_series[index] + (flat_ndata_Series[index],)
+                          for index in range(len(normal_bins_series))]
+
+        self.train_normal_network(normal_X_train, normal_thresholds_series)
+        self.train_asymptotic_network(asymptotic_bins_series, asymptotic_thresholds_series)
+        return
+
+    def predict_value(self, bins: np.array, ndata: int):
+        if ndata < self.max_N: #or True
+            bins = list(bins)
+            rich_histogram = bins
+            rich_histogram.append(ndata)
+            input_data = np.array(rich_histogram)
+            # input_data = self.normal_scaler.transform(np.array(rich_histogram).reshape(1, -1))
+            return self.normal_network.predict(input_data.reshape(1, -1))
+        else:
+            # input_data = self.asymptotic_scaler.transform(bins.reshape(1, -1))
+            input_data = np.array(bins)
+            return self.asymptotic_network.predict(input_data.reshape(1, -1))
+
+    def train_normal_network(self, rich_histograms, thresholds):
+        # self.normal_scaler.transform(rich_histograms)
+        self.normal_network.fit(rich_histograms, thresholds)
+        return
+
+    def train_asymptotic_network(self, histograms, thresholds):
+        # self.asymptotic_scaler.transform(histograms)
+        self.asymptotic_network.fit(histograms, thresholds)
+        return
 
 
 

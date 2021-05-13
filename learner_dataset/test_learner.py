@@ -13,7 +13,7 @@ tested = 100
 values = np.zeros([tested, 3])
 for index in range(tested):
     histogram = frame.iloc[index, 1:-1]
-    threshold_computer = aux.Alternative_threshold_computation(histogram, nu, statistic)
+    threshold_computer = aux.Alternative_threshold_computation(histogram, NU, STATISTIC)
     threshold = threshold_computer.compute_threshold(alpha, 3000)
     threshold2 = threshold_computer.compute_threshold(alpha, 3000)
     threshold_stored = frame.iloc[index, -1]
@@ -36,7 +36,7 @@ for index in range(tested):
     N =     threshold_stored = frame.iloc[index, -1]
     tree = qt.QuantTree(histogram)
     tree.ndata = int(N)
-    threshold_computer = qt.ChangeDetectionTest(tree, nu, statistic)
+    threshold_computer = qt.ChangeDetectionTest(tree, NU, STATISTIC)
     threshold = threshold_computer.estimate_quanttree_threshold(alpha, 3000)
     threshold2 = threshold_computer.estimate_quanttree_threshold(alpha, 3000)
     threshold_stored = frame.iloc[index, -2]
@@ -61,7 +61,7 @@ tested = 40
 values = np.zeros([tested, 3])
 for index in range(tested):
     histogram = aux.create_bins_combination(8, 100)
-    threshold_computer = aux.Alternative_threshold_computation(histogram, nu, statistic)
+    threshold_computer = aux.Alternative_threshold_computation(histogram, NU, STATISTIC)
     threshold = threshold_computer.compute_threshold(alpha, 10000)
     threshold2 = threshold_computer.compute_threshold(alpha, 10000)
     histogram = np.array(histogram)
@@ -97,7 +97,7 @@ for index in range(tested):
     tree = qt.QuantTree(histogram)
     number = np.random.randint(10, 1000)
     tree.ndata =number
-    threshold_computer = qt.ChangeDetectionTest(tree, nu, statistic)
+    threshold_computer = qt.ChangeDetectionTest(tree, NU, STATISTIC)
     threshold = threshold_computer.estimate_quanttree_threshold(alpha, 3000)
     threshold2 = threshold_computer.estimate_quanttree_threshold(alpha, 3000)
     rich_histogram = np.append(histogram, float(number))

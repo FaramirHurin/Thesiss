@@ -114,6 +114,7 @@ class EWMA_QUantTree:
         self.record_history.append(positive)
         """
         assert positive == True or positive == False
+        self.record_history.append(positive)
         return positive
 
     # Compute current value of EMWA based on the value at previous round.
@@ -159,7 +160,7 @@ class EWMA_QUantTree:
 
     def play_round(self, batch):
         assert len(self.values) == len(self.FPR_estimator)
-        assert self.change_round is None
+        #assert self.change_round is None
         self.compute_EMWA(batch)
         change = self.find_change()
         """if self.status == 500:
@@ -289,7 +290,7 @@ PREDECENTE CALCOLO DELLE SOGLIE
         values = np.zeros(max_lenght)
         values[0] = self.values[0]
         for index in range(1, max_lenght):
-            batch = np.random.uniform(0, 1, self.nu)
+            batch = np.random.uniform(0, 1, self.NU)
             positive = self.classic_batch_analysis(batch, tree)
             try:
                 values[index] = (1 - self.lamb) * values[index - 1] + positive * self.lamb
