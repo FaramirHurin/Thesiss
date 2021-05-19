@@ -22,13 +22,13 @@ BINSNUMBER = 32
 DIMENSIONS = (3, 8)
 N = (92, 1024) #1000
 SKL = (1, 2, 4)
-MAX_LENGHT = 8000
+MAX_LENGHT = 20000
 ALPHA = 0.02 # ARL0 = 50 (*32)
 CT = [10, 50 ]
 CHANGE_TIME = (tuple(map(lambda x: int(x/ALPHA * NU), CT)))
 
 STATISTIC = qt.tv_statistic
-EXPERIMENTS = 20
+EXPERIMENTS = 60
 
 logging.debug('FPR should be ' + str(ALPHA))
 
@@ -73,8 +73,8 @@ def compare_detection_power_once\
     return record_qt/iterations, record_iqt/iterations
 
 
-DIMENSIONS_USED = DIMENSIONS[0]
-SKL_USED = SKL[1]
+DIMENSIONS_USED = DIMENSIONS[1]
+SKL_USED = SKL[0]
 def compare_detection_power(initial_pi_values_iqt: list, initial_pi_values_qt:list,
                             smallN: int, bigN: int, nu: int, dimensions_number: int, experiments_N: int,
                             experiment_lenght: int, skl: int):
@@ -94,7 +94,7 @@ def compare_detection_power(initial_pi_values_iqt: list, initial_pi_values_qt:li
 
 def test_power():
     qt_to_plot, iqt_to_plot = compare_detection_power(INITIAL_BINS_IQT, INITIAL_BINS_IQT, N[0], N[1], NU,
-                                                      DIMENSIONS_USED, 4, 200, SKL_USED)
+                                                      DIMENSIONS_USED, EXPERIMENTS, MAX_LENGHT, SKL_USED)
     logger.debug('QT are' + str(qt_to_plot))
     logger.debug('IQT are' + str(iqt_to_plot))
     plt.boxplot([qt_to_plot, iqt_to_plot], labels=['QuantTree', 'Incremental QuantTree'], showmeans=True)

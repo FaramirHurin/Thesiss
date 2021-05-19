@@ -10,7 +10,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     datefmt='%Y-%m-%d %H:%M:%S')
 
-
+USES_PICKLE = True
 
 # from main_code import neuralNetworks as nn
 
@@ -89,8 +89,6 @@ class Neural_Network:
         # sys.path.append('new_testsAndAlgorithms')
         DEBUG = 0
         file = open("dictionary_to_learn.pickle", 'rb')
-        self.normal_scaler = Normalizer()
-        self.asymptotic_scaler = Normalizer()
         self.dictionary = pickle.load(file)
         file.close() #adam, lbfgs, sgd
         self.normal_network = MLPRegressor\
@@ -101,21 +99,20 @@ class Neural_Network:
         # logger.debug('Number of nodes is:' + str(self.normal_network.hidden_layer_sizes) + ' and solver is ' + str(self.normal_network.solver) )
         # if self.normal_network.solver != 'lbfgs':
         #     logger.debug('Shuffle is ' + str(self.normal_network.shuffle))
-
         self.train_network(dictionary=self.dictionary)
-        # self.max_N = 0
+        ndata_series = self.dictionary['ndata series']
+        self.max_N = max(ndata_series)
         return
 
     def get_dictionary(self):
         return self.dictionary
 
-    def train_network(self, dictionary):
+    def train_network_normally(self, dictionary):
         normal_bins_series = dictionary['Normal Bins Series']
         normal_thresholds_series = dictionary['Normal thresholds series']
         ndata_series = dictionary['ndata series']
         asymptotic_bins_series = dictionary['Asymptotic bins series']
         asymptotic_thresholds_series = dictionary['Asymptotic thresholds series']
-        self.max_N = max(ndata_series)
         fat_ndata_Series = (30 * ndata_series)
         flat_ndata_Series = [elem for elem in fat_ndata_Series]
         normal_X_train = [normal_bins_series[index] + (flat_ndata_Series[index],)
@@ -123,6 +120,17 @@ class Neural_Network:
 
         self.train_normal_network(normal_X_train, normal_thresholds_series)
         self.train_asymptotic_network(asymptotic_bins_series, asymptotic_thresholds_series)
+        return
+
+    def train_network(self, dictionary):
+        if USES_PICKLE:
+            try:
+                self.use_stored_network()
+            except:
+                self.store_trained_network(dictionary)
+                self.use_stored_network()
+        else:
+            self.train_network_normally(dictionary)
         return
 
     def predict_value(self, bins: np.array, ndata: int):
@@ -148,5 +156,18 @@ class Neural_Network:
         self.asymptotic_network.fit(histograms, thresholds)
         return
 
+    def store_trained_network(self, dictionary):
+        self.train_network_normally(dictionary)
+        file = open('Networks.pickle', 'wb')
+        pickle.dump([self.normal_network, self.asymptotic_network], file)
+        file.close()
+        return
 
+    def use_stored_network(self):
+        file = open('Networks.pickle', 'rb')
+        [normal, asymptotic] = pickle.load(file)
+        file.close()
+        self.normal_network = normal
+        self.asymptotic_network = asymptotic
+        return
 

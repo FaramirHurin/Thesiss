@@ -36,7 +36,9 @@ class EWMA_QUantTree:
         self.alpha = alpha
         self.beta = 1 / desired_ARL0  # 1/ARL0
         self.desired_ARL0 = desired_ARL0
-
+        self.EWMA_thresholds = None
+        table = self.fill_table(1000, desired_ARL0)
+        self.compute_thresholds_on_table(table)
         #self.EWMA_thresholds = ewma_thresholds
         self.FPR_estimator = [0]
         self.threshold = None
@@ -46,7 +48,59 @@ class EWMA_QUantTree:
         self.training_set = None
         self.change_round = None
         self.tie_breaker = 0
-        self.thresholds = [0]
+        # self.thresholds = [0]
+
+    def compute_thresholds_on_table(self, TABLE):
+        while not TABLE.shape[0] <  1/self.beta or TABLE.shape[1] < 1:
+
+        #First cycle initialization
+            if self.EWMA_thresholds is None:
+                self.EWMA_thresholds = []
+        #Normal run
+            values = TABLE[:, 0]
+            vals = np.sort(values)
+            threshold = vals[int(len(vals) * (1 - self.beta))]
+            self.EWMA_thresholds.append(threshold)
+            to_eliminate = []
+            for index in range(TABLE.shape[0]):
+                if TABLE[index, 0] > threshold:
+                    to_eliminate.append(index)
+            TABLE = np.delete(TABLE, to_eliminate, axis=0)
+            TABLE = np.delete(TABLE, 0, axis = 1)
+        return
+
+    def fill_table(self, experiments, max_lenght):
+        #Indipendence percentage represents the number of different trees used for threshold computation.
+        #Used to average over the noise on trees generation
+        indipendence_percentage = 1/2000
+        TABLE = np.zeros([experiments, max_lenght])
+        tree = None
+        for index in range(experiments):
+            if index % 1000 == 0:
+                print (index)
+            if index * indipendence_percentage %1 == 0:
+                tree = self.prepare_tree_for_simulation()
+            values = self.simulate_EWMA_run(max_lenght, tree)
+            TABLE[index] = values
+        return TABLE
+
+    def prepare_tree_for_simulation(self):
+        training_set = np.random.uniform(0, 1, self.tree.ndata)
+        tree = qt.QuantTreeUnivariate(self.tree.pi_values)
+        tree.build_histogram(training_set)
+        return tree
+
+    def simulate_EWMA_run(self, max_lenght, tree):
+        values = np.zeros(max_lenght)
+        values[0] = self.values[0]
+        for index in range(1, max_lenght):
+            batch = np.random.uniform(0, 1, self.NU)
+            positive = self.classic_batch_analysis(batch, tree)
+            try:
+                values[index] = (1 - self.lamb) * values[index - 1] + positive * self.lamb
+            except:
+                raise(Exception)
+        return values
 
     #Must be called from outside. Here the EWMA thresholds are initialized if not called from outside
     def build_histogram(self, training_set, definitive = True):
@@ -181,6 +235,17 @@ class EWMA_QUantTree:
         self.change_round = None
         return
 
+
+
+
+
+
+
+
+
+
+
+
 class Offline_EWMA_QuantTree(EWMA_QUantTree):
 
     def modify_histogram(self, data, definitive = False):
@@ -240,61 +305,8 @@ PREDECENTE CALCOLO DELLE SOGLIE
         TABLE = self.fill_table(EXPERIMENTS, MAX_LENGHT)
         self.compute_thresholds_on_table(TABLE)
         return
-
+"""
     #Recursive calls: appends a threshold to the ones compited so far.
     #It modifies the TABLE and passes to a new istance of itself
-    def compute_thresholds_on_table(self, TABLE):
-        if TABLE.shape[0] <  1/self.beta or TABLE.shape[1] < 1:
-            # End Cycle
-            return
-        #First cycle initialization
-        if self.EWMA_thresholds is None:
-            self.EWMA_thresholds = []
-        #Normal run
-        values = TABLE[:, 0]
-        vals = np.sort(values)
-        threshold = vals[int(len(vals) * (1 - self.beta))]
-        self.EWMA_thresholds.append(threshold)
-        to_eliminate = []
-        for index in range(TABLE.shape[0]):
-            if TABLE[index, 0] > threshold:
-                to_eliminate.append(index)
-        TABLE = np.delete(TABLE, to_eliminate, axis=0)
-        TABLE = np.delete(TABLE, 0, axis = 1)
-        #Recursive call
-        self.compute_thresholds_on_table(TABLE)
-        return
 
-    def fill_table(self, experiments, max_lenght):
-        #Indipendence percentage represents the number of different trees used for threshold computation.
-        #Used to average over the noise on trees generation
-        indipendence_percentage = 1/2000
-        TABLE = np.zeros([experiments, max_lenght])
-        tree = None
-        for index in range(experiments):
-            if index % 1000 == 0:
-                print (index)
-            if index * indipendence_percentage %1 == 0:
-                tree = self.prepare_tree_for_simulation()
-            values = self.simulate_EWMA_run(max_lenght, tree)
-            TABLE[index] = values
-        return TABLE
 
-    def prepare_tree_for_simulation(self):
-        training_set = np.random.uniform(0, 1, self.tree.ndata)
-        tree = qt.QuantTreeUnivariate(self.tree.pi_values)
-        tree.build_histogram(training_set)
-        return tree
-
-    def simulate_EWMA_run(self, max_lenght, tree):
-        values = np.zeros(max_lenght)
-        values[0] = self.values[0]
-        for index in range(1, max_lenght):
-            batch = np.random.uniform(0, 1, self.NU)
-            positive = self.classic_batch_analysis(batch, tree)
-            try:
-                values[index] = (1 - self.lamb) * values[index - 1] + positive * self.lamb
-            except:
-                raise(Exception)
-        return values
-"""
